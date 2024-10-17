@@ -1,4 +1,4 @@
-import { Container } from "./approach/Stream/Container";
+import { Container } from "./approach/Container/Container";
 
 console.log("Hello via Bun!");
 
