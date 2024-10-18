@@ -18,7 +18,9 @@ class Container extends Stream<string> {
         yield this.content;
 
         for (let node of this.nodes) {
-            yield node.stream();
+            for (let r of node.stream()) {
+                yield r;
+            }
         }
     }
 
