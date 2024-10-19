@@ -10,6 +10,29 @@ class Node extends Container {
         super(content);
         this.prerender = prerender;
         this.set_render_id();
+
+        return new Proxy(this, {
+            get(target: Node, prop: string | symbol): any {
+                if (typeof prop === "string" && !isNaN(Number(prop))) {
+                    return target.nodes[Number(prop)];
+                }
+                return (target as any)[prop];
+            },
+            set(target: Node, prop: string | symbol, value: any): boolean {
+                if (typeof prop === "string" && !isNaN(Number(prop)) && value instanceof Node) {
+                    target.nodes[Number(prop)] = value;
+                    return true;
+                }
+                (target as any)[prop] = value;
+                return true;
+            },
+            has(target: Node, prop: string | symbol): boolean {
+                if (typeof prop === "string" && !isNaN(Number(prop))) {
+                    return Number(prop) < target.nodes.length;
+                }
+                return prop in target;
+            }
+        });
     }
 
     set_render_id() {
@@ -36,4 +59,4 @@ class NodeArray extends Array<Node> {
     }
 }
 
-export { NodeArray };
+export { NodeArray, Node };
