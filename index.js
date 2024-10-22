@@ -1,5 +1,4 @@
-import { XML } from "./approach/XML/Xml";
-import { HTML } from "./approach/HTML/Html";
+import { HTML } from "./approach/Render/HTML/Html";
 
 let xml = new HTML("html", "", [], {"lang": "en"});
 let head = new HTML("head");
