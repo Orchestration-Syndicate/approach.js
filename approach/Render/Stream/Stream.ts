@@ -1,10 +1,10 @@
 import { type Streamability } from "./Streamability";
 
 class Stream<T> implements Streamability<T> {
-    _labeled_nodes: any[];
-    _node_labels: any[];
+    _labeled_nodes: Stream<T>[];
+    _node_labels: string[];
 
-    constructor(){
+    constructor() {
         this._labeled_nodes = [];
         this._node_labels = [];
     }

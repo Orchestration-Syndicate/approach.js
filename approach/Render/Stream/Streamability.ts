@@ -1,6 +1,6 @@
 export interface Streamability<T> {
-    _labeled_nodes: any[];
-    _node_labels: any[];
+    _labeled_nodes: Streamability<T>[];
+    _node_labels: string[];
 
     render(): T;
     stream(): any;
