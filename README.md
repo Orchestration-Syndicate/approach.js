@@ -10,8 +10,14 @@ the type safety and code completion benefits.
 
 ## Running
 
+It is recommended that you use `bun.js` to run the code, however, anything above Node.js 14 should work.
+
 1. Install dependencies: `npm install`
 2. Run the tests: `npm run index.js`
+
+## Tests
+
+Tests are written using the bun testing frameword. To run the tests, run `bun test`.
 
 ## License
 
