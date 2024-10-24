@@ -1,0 +1,9 @@
+<Imprint xmlns:Imprint="Render://approach.local">
+    <Imprint:Pattern name="minimal" type="HTML">
+        <div class="Hello">
+            <p>
+                [@ A @]
+            </p>
+        </div>
+    </Imprint:Pattern>
+</Imprint>
