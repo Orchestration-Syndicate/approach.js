@@ -5,5 +5,16 @@
                 [@ A @]
             </p>
         </div>
+        <p>Hello World</p>
+        <a href="noobscience.in" class="hello">NoobScience</a>
+    </Imprint:Pattern>
+    <Imprint:Pattern name="cool" type="HTML">
+        <div class="Hello">
+            <p>
+                [@ A @]
+            </p>
+        </div>
+        <p>Hello World</p>
+        <a href="noobscience.in" class="hello">NoobScience</a>
     </Imprint:Pattern>
 </Imprint>
