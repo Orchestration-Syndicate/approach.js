@@ -4,6 +4,7 @@ import { XMLParser } from "fast-xml-parser";
 import { XmlDocument, XmlElement, type XmlNode } from "xmldoc";
 import { HTML } from "../Render/HTML/Html";
 import { Token } from "../Render/Token/Token";
+import { XML } from "../Render/XML/Xml";
 
 const TOKEN_SYMBOL_START = "[@ ";
 const TOKEN_SYMBOL_END = " @]";
@@ -63,7 +64,7 @@ class Imprint {
     }
 
     recurse(pattern: XmlNode) {
-        let nodes = [];
+        let nodes: Node[] = [];
         let xml = pattern.toString();
 
         if (pattern.type == "text") {
@@ -101,23 +102,25 @@ class Imprint {
                 return [new Node(xml)];
             } else {
                 for (let child of pattern.children) {
-                    nodes.push(this.recurse(child));
+                    nodes.push(...this.recurse(child));
                 }
 
-                let args: { [key: string]: string | Node } = {};
+                let args: { [key: string]: string } = {};
 
                 for (let arg of Object.keys(pattern.attr)) {
                     let token = this.getToken(pattern.attr[arg]);
                     if (token != null) {
-                        args[arg] = new Token(token);
+                        args[arg] = new Token(token).render();
                     } else {
                         args[arg] = pattern.attr[arg];
                     }
                 }
+                let res = new XML(pattern.name, "", args);
+                res.nodes = nodes as XML[];
+                return [res];
             }
         }
 
-        console.log(pattern);
 
         return [];
     }
@@ -135,7 +138,6 @@ class Imprint {
     }
 
     preparePattern(pattern: XmlElement) {
-        //console.log(pattern);
         //
         // TODO: Implement dynamic stuff using type.
         // For now, all of them default to HTML for all xml and Node for attributes
@@ -146,7 +148,7 @@ class Imprint {
         this.pattern[name] = new Node();
 
         for (let child of pattern.children) {
-            this.pattern[name].nodes = this.recurse(child);
+            this.pattern[name].nodes.push(...this.recurse(child));
         }
     }
 
@@ -161,13 +163,9 @@ class Imprint {
             let imprint_dir = this.getImprintFileDir();
             let pattern_path = imprint_dir + "/" + pattern + ".js";
             console.log("Minting: " + pattern_path);
-
-            // if imprint_dir does not exist, create it
             if (!fs.existsSync(imprint_dir)) {
                 fs.mkdirSync(imprint_dir, { recursive: true });
             }
-
-            // write the content to the file
             fs.writeFileSync(pattern_path, content);
         }
     }
