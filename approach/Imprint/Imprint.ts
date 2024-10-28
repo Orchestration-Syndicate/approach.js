@@ -15,6 +15,10 @@ class Imprint {
     public imprint: string;
     public imprint_dir: string;
     public static export_depth = 0;
+    public generation_count: { [key: string]: number } = {};
+    public _bound: { [key: string]: string } = {};
+    public resolved_symbols: { [key: string]: string } = {};
+    public found_tokens: { [key: string]: string } = {};
 
     constructor(imprint = "", imprint_dir = "", pattern = {}) {
         this.pattern = pattern;
@@ -23,13 +27,106 @@ class Imprint {
         this.tokens = [];
     }
 
+    getNodeType(node: Node) {
+        return node.constructor.name;
+    }
+
+    /**
+     * getNodeID
+     *
+     * Returns a unique identifier for a given node.
+     *
+     * @param Node $node The node to get the identifier for.
+     * @return int|string The identifier for the node.
+     */
+    getNodeID(node: Node) {
+        let id: string = String(node._render_id);
+        let type = this.getNodeType(node);
+        if (type == "Token") {
+            id = "t-" + id;
+        }
+        return id;
+    }
+
+    /**
+     * exportNodeSymbol
+     *
+     * Algorithm to elect a symbol for a node
+     * Note: Only element nodes are sent to exportNodeSymbol(), parameter and token nodes have their own exports
+     *
+     * @param Node node
+     * @return string
+     */
+    exportNodeSymbol(node: Node) {
+        let type = this.getNodeType(node);
+        let id = this.getNodeID(node);
+
+        if (this.generation_count[type] == undefined) {
+            this.generation_count[type] = 0;
+        }
+
+        if (type === "Token") {
+            this._bound[id] = "this.tokens[" + node.name + "]";
+            this.found_tokens[node.name] = id;
+
+            this.resolved_symbols[id] = this._bound[id];
+        }
+
+        if (this._bound[id] !== undefined) {
+            if (this.resolved_symbols[id] === undefined) {
+                this.generation_count[type]++;
+            }
+            this.resolved_symbols[id] = this._bound[id];
+        }
+
+        if (this.resolved_symbols[id] !== undefined) {
+            this.resolved_symbols[id] = type + "_" + this.generation_count[type];
+            this.generation_count[type]++;
+        }
+
+        return this.resolved_symbols[id];
+    }
+
+    getConstructorParams(cls: any) {
+        const constructorStr = cls.prototype.constructor.toString();
+        const result: string[] = constructorStr
+            .match(/\(([^)]*)\)/)[1]
+            .split(",")
+            .map((param: string) => param.trim())
+            .filter((param: string | any[]) => param.length > 0);
+        return result;
+    }
+
+    exportParameterBlocks(node: Node, parameters: string[]){
+
+    }
+
+    exportNodeConstructor(node: Node, tab = "") {
+        let prepend = "";
+        let type = this.getNodeType(node);
+
+        let statement = "new" + type + "(";
+
+        // get possible parameters for the type
+        const instance = eval(`new ${type}()`);
+        let parameters = this.getConstructorParams(instance);
+    }
+
     exportNode(
-        node: Node | string,
+        node: Node,
         parent: Node | null = null,
         export_symbol: string | null = null,
     ) {
-        let tab = "\t".repeat(Imprint.export_depth);
-        Imprint.export_depth++;
+        // let tab = "\t".repeat(Imprint.export_depth);
+        // Imprint.export_depth++;
+        let symbol = export_symbol ?? this.exportNodeSymbol(node);
+
+        let id = this.getNodeID(node);
+        let type = this.getNodeType(node);
+
+        let predefined = this._bound[id] !== undefined;
+
+        return symbol;
     }
 
     print(pattern = "") {
@@ -39,7 +136,7 @@ class Imprint {
         }
         let lines = this.exportNode(tree);
 
-        return "Hello World";
+        return lines;
     }
 
     /** Gets the directory where the imprints are stored @returns string */
@@ -120,7 +217,6 @@ class Imprint {
                 return [res];
             }
         }
-
 
         return [];
     }

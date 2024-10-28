@@ -5,6 +5,7 @@ class Node extends Container {
     public static _render_count = 0;
     public _render_id = 0;
     public nodes: Node[] = [];
+    public name = "";
 
     constructor(content = "", prerender = false) {
         super(content);
@@ -14,6 +15,7 @@ class Node extends Container {
 
     set_render_id() {
         this._render_id = Node._render_count++;
+        this.name = this.constructor.name + "" + this._render_id;
     }
 
     GetById(root: Node, render_id: number): Node | null {
