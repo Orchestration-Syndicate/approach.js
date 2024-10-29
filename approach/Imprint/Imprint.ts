@@ -68,48 +68,96 @@ class Imprint {
         if (type === "Token") {
             this._bound[id] = "this.tokens[" + node.name + "]";
             this.found_tokens[node.name] = id;
-
-            this.resolved_symbols[id] = this._bound[id];
         }
 
-        if (this._bound[id] !== undefined) {
-            if (this.resolved_symbols[id] === undefined) {
-                this.generation_count[type]++;
-            }
-            this.resolved_symbols[id] = this._bound[id];
-        }
-
-        if (this.resolved_symbols[id] !== undefined) {
-            this.resolved_symbols[id] = type + "_" + this.generation_count[type];
-            this.generation_count[type]++;
-        }
+        this.resolved_symbols[id] = type + "_" + this.generation_count[type];
+        this.generation_count[type]++;
 
         return this.resolved_symbols[id];
     }
 
-    getConstructorParams(cls: any) {
-        const constructorStr = cls.prototype.constructor.toString();
-        const result: string[] = constructorStr
-            .match(/\(([^)]*)\)/)[1]
-            .split(",")
-            .map((param: string) => param.trim())
-            .filter((param: string | any[]) => param.length > 0);
-        return result;
+    getConstructorParams(cls: string) {
+        const constructorRegex = /constructor\s*\(([^)]*)\)/;
+        const match = cls.match(constructorRegex);
+        let res: string[] = [];
+
+        if (match && match[1]) {
+            res = match[1].split(",").map((arg: string) => arg.trim());
+        }
+
+        // Split it into key value pairs
+        let pairs: { [key: string]: any } = {};
+        res.forEach((pair) => {
+            let [key, value] = pair.split("=");
+            if (value == undefined) {
+                pairs[key] = null;
+            } else {
+
+                if (value.includes('"')) {
+                    pairs[key] = value.replace(/"/g, "");
+                } else if (value.includes("!")) {
+                    if (value.includes("1")) {
+                        pairs[key] = false;
+                    } else {
+                        pairs[key] = true;
+                    }
+                } else if (!isNaN(Number(value))) {
+                    pairs[key] = Number(value);
+                } else if (value.includes("null")) {
+                    pairs[key] = null;
+                } else if (value.includes("[")) {
+                    pairs[key] = value.split("[").join("").split("]").join("").split(",");
+                } else if (value.includes("{")) {
+                    pairs[key] = value.split("{").join("").split("}").join("").split(",");
+                } else {
+                    pairs[key] = value;
+                }
+            }
+        });
+
+        return pairs;
     }
 
-    exportParameterBlocks(node: Node, parameters: string[]){
+    exportParameterBlocks(node: Node, parameters: { [key: string]: any }, name: string = "") {
+        let block = "";
+        for (let key of Object.keys(parameters)) {
+            key = key.trim().replace(" ", "");
+            //@ts-ignore
+            let value = node[key] !== undefined ? node[key] : parameters[key];
+            if (value == null || value == undefined) {
+                block += name + "." + key + " = null;\n";
+            } else if (typeof value == "string") {
+                block += name + "." + key + ' = "' + value + '";\n';
+            } else if (typeof value == "number") {
+                block += name + "." + key + " = " + value + ";\n";
+            } else if (typeof value == "boolean") {
+                block += name + "." + key + " = " + value + ";\n";
+            } else if (Array.isArray(value)) {
+                block += name + "." + key + " = [" + value.join(", ") + "];\n";
+            } else if (typeof value == "object") {
+                block += name + "." + key + " = {" + this.exportParameterBlocks(node, value) + "};\n";
+            } else {
+                block += name + "." + key + " = " + value + ";\n";
+            }
+        }
 
+        return block;
     }
 
-    exportNodeConstructor(node: Node, tab = "") {
+
+    exportNodeConstructor(node: Node, name: string, tab = "") {
         let prepend = "";
         let type = this.getNodeType(node);
 
-        let statement = "new" + type + "(";
+        let statement = tab;
 
-        // get possible parameters for the type
         const instance = eval(`new ${type}()`);
-        let parameters = this.getConstructorParams(instance);
+        let parameters = this.getConstructorParams(instance.constructor.toString());
+        let paramBlock = this.exportParameterBlocks(node, parameters, name);
+
+        statement += paramBlock
+
+        return statement;
     }
 
     exportNode(
@@ -117,16 +165,30 @@ class Imprint {
         parent: Node | null = null,
         export_symbol: string | null = null,
     ) {
-        // let tab = "\t".repeat(Imprint.export_depth);
-        // Imprint.export_depth++;
-        let symbol = export_symbol ?? this.exportNodeSymbol(node);
+        let symbol = this.exportNodeSymbol(node);
 
         let id = this.getNodeID(node);
         let type = this.getNodeType(node);
 
+        let statement = "let " + symbol + " = new " + type + "();\n";
+        statement += this.exportNodeConstructor(node, symbol, "");
+
+        if (parent != null) {
+            statement += parent._render_id + ".nodes.push(" + symbol + ");\n";
+        }
+
         let predefined = this._bound[id] !== undefined;
 
-        return symbol;
+
+        if (!predefined) {
+            statement += symbol + ".nodes = [];\n";
+        }
+
+        //for (let child of node.nodes) {
+        //    statement += this.exportNode(child, node);
+        //}
+
+        return statement;
     }
 
     print(pattern = "") {

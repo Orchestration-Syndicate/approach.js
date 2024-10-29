@@ -10,7 +10,7 @@ class XML extends Node {
     public before: string | null = null;
     public after: string | null = null;
 
-    constructor(tag: string, content: string = "", attributes: { [key: string]: string } = {}, selfContained: boolean = false) {
+    constructor(tag: string = "", content: string = "", attributes: { [key: string]: string } = {}, selfContained: boolean = false) {
         super(content);
         this.tag = tag;
         this.attributes = attributes;
