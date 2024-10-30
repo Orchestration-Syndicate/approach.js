@@ -12,6 +12,10 @@ class XML extends Node {
 
     constructor(tag: string = "", content: string = "", attributes: { [key: string]: string } = {}, selfContained: boolean = false) {
         super(content);
+
+        //@ts-ignore
+        globalThis.XML = XML;
+
         this.tag = tag;
         this.attributes = attributes;
         this.selfContained = selfContained;

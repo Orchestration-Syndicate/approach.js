@@ -9,6 +9,8 @@ class Node extends Container {
 
     constructor(content = "", prerender = false) {
         super(content);
+        //@ts-ignore
+        globalThis.Node = Node;
         this.prerender = prerender;
         this.set_render_id();
     }

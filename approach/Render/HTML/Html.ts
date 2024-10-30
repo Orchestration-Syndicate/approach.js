@@ -7,7 +7,7 @@ class HTML extends XML {
     public classes: string[] = [];
 
     constructor(
-        tag: string,
+        tag: string = 'div',
         id: string | null = null,
         classes: string[] = [],
         attributes: { [key: string]: string } = {},
@@ -20,6 +20,9 @@ class HTML extends XML {
         this.classes = classes;
         this.id = id;
         this.styles = styles;
+
+        //@ts-ignore
+        globalThis.HTML = HTML;
 
         if (this.classes.length > 0) {
             this.attributes['class'] = this.classes.join(' ');

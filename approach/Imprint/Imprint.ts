@@ -3,6 +3,7 @@ import { Node } from "../Render/Node/Node";
 import { XmlDocument, XmlElement, type XmlNode } from "xmldoc";
 import { Token } from "../Render/Token/Token";
 import { XML } from "../Render/XML/Xml";
+import { HTML } from "../Render/HTML/Html";
 
 const TOKEN_SYMBOL_START = "[@ ";
 const TOKEN_SYMBOL_END = " @]";
@@ -117,37 +118,38 @@ class Imprint {
     }
 
     exportParameterBlocks(node: Node, parameters: { [key: string]: any }, name: string = "") {
-        let block = "";
+        let block = "(";
         for (let key of Object.keys(parameters)) {
             key = key.trim().replace(" ", "");
             //@ts-ignore
             let value = node[key] !== undefined ? node[key] : parameters[key];
             if (value == null || value == undefined) {
-                block += name + "." + key + " = null;\n";
+                block += "null, ";
             } else if (typeof value == "string") {
                 value = value.replace(/"/g, "'");
-                block += name + "." + key + ' = "' + value + '";\n';
+                block += '"' + value + '", ';
             } else if (typeof value == "number") {
-                block += name + "." + key + " = " + value + ";\n";
+                block += value + ", ";
             } else if (typeof value == "boolean") {
-                block += name + "." + key + " = " + value + ";\n";
+                block += value + ", ";
             } else if (Array.isArray(value)) {
-                block += name + "." + key + " = [" + value.join(", ") + "];\n";
+                block += "[" + value.join(", ") + "], ";
             } else if (typeof value == "object") {
-                block += name + "." + key + " = {";
+                block += "{";
                 for (let k of Object.keys(value)) {
                     block += "'" + k + "': '" + value[k] + "', ";
                 }
-                block += "};\n";
+                block += "}, ";
             } else {
                 value = value.replace(/"/g, "'");
-                block += name + "." + key + " = " + value + ";\n";
+                block += value + ", ";
             }
         }
 
+        block += ");\n";
+
         return block;
     }
-
 
     exportNodeConstructor(node: Node, name: string, tab = "") {
         let prepend = "";
@@ -155,7 +157,8 @@ class Imprint {
 
         let statement = tab;
 
-        const instance = eval(`new ${type}()`);
+        //@ts-ignore
+        let instance = new (globalThis[type])(); // This will create a new Dog instance
         let parameters = this.getConstructorParams(instance.constructor.toString());
         let paramBlock = this.exportParameterBlocks(node, parameters, name);
 
@@ -175,7 +178,7 @@ class Imprint {
         let id = this.getNodeID(node);
         let type = this.getNodeType(node);
 
-        let statement = "let " + symbol + " = new " + type + "();\n";
+        let statement = "let " + symbol + " = new " + type;
         statement += this.exportNodeConstructor(node, symbol, "");
 
         if (parent != null) {
