@@ -1,8 +1,6 @@
 import * as fs from "fs";
 import { Node } from "../Render/Node/Node";
-import { XMLParser } from "fast-xml-parser";
 import { XmlDocument, XmlElement, type XmlNode } from "xmldoc";
-import { HTML } from "../Render/HTML/Html";
 import { Token } from "../Render/Token/Token";
 import { XML } from "../Render/XML/Xml";
 
@@ -127,6 +125,7 @@ class Imprint {
             if (value == null || value == undefined) {
                 block += name + "." + key + " = null;\n";
             } else if (typeof value == "string") {
+                value = value.replace(/"/g, "'");
                 block += name + "." + key + ' = "' + value + '";\n';
             } else if (typeof value == "number") {
                 block += name + "." + key + " = " + value + ";\n";
@@ -135,8 +134,13 @@ class Imprint {
             } else if (Array.isArray(value)) {
                 block += name + "." + key + " = [" + value.join(", ") + "];\n";
             } else if (typeof value == "object") {
-                block += name + "." + key + " = {" + this.exportParameterBlocks(node, value) + "};\n";
+                block += name + "." + key + " = {";
+                for (let k of Object.keys(value)) {
+                    block += "'" + k + "': '" + value[k] + "', ";
+                }
+                block += "};\n";
             } else {
+                value = value.replace(/"/g, "'");
                 block += name + "." + key + " = " + value + ";\n";
             }
         }
@@ -165,6 +169,7 @@ class Imprint {
         parent: Node | null = null,
         export_symbol: string | null = null,
     ) {
+        console.log("Exporting node: ", node);
         let symbol = this.exportNodeSymbol(node);
 
         let id = this.getNodeID(node);
@@ -174,19 +179,12 @@ class Imprint {
         statement += this.exportNodeConstructor(node, symbol, "");
 
         if (parent != null) {
-            statement += parent._render_id + ".nodes.push(" + symbol + ");\n";
+            statement += parent.name + ".nodes.push(" + symbol + ");\n\n";
         }
 
-        let predefined = this._bound[id] !== undefined;
-
-
-        if (!predefined) {
-            statement += symbol + ".nodes = [];\n";
+        for (let child of node.nodes) {
+            statement += this.exportNode(child, node);
         }
-
-        //for (let child of node.nodes) {
-        //    statement += this.exportNode(child, node);
-        //}
 
         return statement;
     }
@@ -208,11 +206,9 @@ class Imprint {
 
     Prepare() {
         let file_content = fs.readFileSync(this.imprint, "utf8");
-        const parser = new XMLParser({
-            ignoreAttributes: false, // Keep XML attributes
-            allowBooleanAttributes: true, // Allow boolean attributes
-        });
-        let json = parser.parse(file_content);
+        file_content = file_content
+            .replace(/\s+/g, ' ')
+            .replace(/>\s+</g, '><');
 
         let xml = new XmlDocument(file_content);
         let tree = xml.childrenNamed("Imprint:Pattern");
@@ -318,6 +314,7 @@ class Imprint {
             }
         } else {
             let content = this.print(pattern);
+            console.log(content);
             let imprint_dir = this.getImprintFileDir();
             let pattern_path = imprint_dir + "/" + pattern + ".js";
             console.log("Minting: " + pattern_path);

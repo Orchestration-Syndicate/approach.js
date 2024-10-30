@@ -15,7 +15,7 @@ class Node extends Container {
 
     set_render_id() {
         this._render_id = Node._render_count++;
-        this.name = this.constructor.name + "" + this._render_id;
+        this.name = this.constructor.name + "_" + this._render_id;
     }
 
     GetById(root: Node, render_id: number): Node | null {
