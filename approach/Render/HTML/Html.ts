@@ -5,6 +5,8 @@ class HTML extends XML {
     public styles: { [key: string]: string } = {};
     public id: string | null = null;
     public classes: string[] = [];
+    public _render_id = 0;
+    public static _render_count = 0;
 
     constructor(
         tag: string = 'div',
@@ -35,7 +37,16 @@ class HTML extends XML {
                 .map((key) => `${key}: ${this.styles[key]}`)
                 .join('; ');
         }
+
+        this.set_render_id();
     }
+
+    set_render_id() {
+        this._render_id = HTML._render_count;
+        XML._render_count++;
+        this.name = this.constructor.name + "_" + this._render_id;
+    }
+
 }
 
 export { HTML };

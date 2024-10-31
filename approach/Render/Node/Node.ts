@@ -7,7 +7,7 @@ class Node extends Container {
     public nodes: Node[] = [];
     public name = "";
 
-    constructor(content = "", prerender = false) {
+    constructor(content: string | Node = "", prerender = false) {
         super(content);
         //@ts-ignore
         globalThis.Node = Node;

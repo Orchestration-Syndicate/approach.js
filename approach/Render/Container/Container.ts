@@ -2,9 +2,9 @@ import { Stream } from "../Stream/Stream";
 
 class Container extends Stream<string> {
     public nodes: Container[];
-    public content: string;
+    public content: string | Container;
 
-    constructor(content = "") {
+    constructor(content: string | Container = "") {
         super();
         this.content = content;
         this.nodes = [];
@@ -54,7 +54,7 @@ class Container extends Stream<string> {
     }
 
     * RenderBody(): any {
-        yield this.content;
+        yield this.content.toString();
 
         for (let node of this.nodes) {
             for (let r of node.stream()) {
