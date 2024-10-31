@@ -8,7 +8,7 @@ const TOKEN_SYMBOL_START = "[@ ";
 const TOKEN_SYMBOL_END = " @]";
 
 class Imprint {
-    public tokens: string[];
+    public tokens: { [key: string]: Token };
     public pattern: { [key: string]: Node };
     public imprint: string;
     public imprint_dir: string;
@@ -22,7 +22,7 @@ class Imprint {
         this.pattern = pattern;
         this.imprint = imprint;
         this.imprint_dir = imprint_dir;
-        this.tokens = [];
+        this.tokens = {};
     }
 
     getNodeType(node: Node) {
@@ -66,6 +66,8 @@ class Imprint {
 
         this.resolved_symbols[id] = type + "_" + this.generation_count[type];
         this.generation_count[type]++;
+
+        node.name = this.resolved_symbols[id];
 
         return this.resolved_symbols[id];
     }
@@ -112,53 +114,51 @@ class Imprint {
         return pairs;
     }
 
-    exportParameterBlocks(node: Node, parameters: { [key: string]: any }) {
-        let block = "(";
+    exportParameterBlocks(node: Node, parameters: { [key: string]: any }, symbol = "") {
+        let block = "";
+        let names = [];
         for (let key of Object.keys(parameters)) {
             key = key.trim().replace(" ", "");
             //@ts-ignore
             let value = node[key] !== undefined ? node[key] : parameters[key];
+            let name = symbol + "_" + key.charAt(0).toUpperCase() + key.slice(1)
+            let statement = "let " + name + " = ";
+            names.push(name);
+
             if (value == null || value == undefined) {
-                block += "null, ";
-            } else if (typeof value == "string") {
+                statement += "null\n";
+            } else if (typeof value === "string") {
                 value = value.replace(/"/g, "'");
-                block += '"' + value + '", ';
-            } else if (typeof value == "number") {
-                block += value + ", ";
-            } else if (typeof value == "boolean") {
-                block += value + ", ";
+                statement += '"' + value + '"\n';
+            } else if (typeof value === "number") {
+                statement += value + "\n";
+            } else if (typeof value === "boolean") {
+                statement += value + "\n";
             } else if (Array.isArray(value)) {
-                block += "[" + value.join(", ") + "], ";
-            } else if (typeof value == "object") {
-                block += "{";
-                for (let k of Object.keys(value)) {
-                    block += "'" + k + "': '" + value[k] + "', ";
-                }
-                block += "}, ";
+                statement += "[" + value.join(",") + "]\n";
+            } else if (typeof value === "object") {
+                statement += JSON.stringify(value) + "\n";
             } else {
-                value = value.replace(/"/g, "'");
-                block += value + ", ";
+                statement += value + "\n";
             }
+
+            block += statement;
         }
 
-        block += ");\n";
-
-        return block;
+        return [block, names];
     }
 
-    exportNodeConstructor(node: Node, tab = "") {
-        let type = this.getNodeType(node);
-
-        let statement = tab;
+    exportNodeConstructor(node: Node, type = "", symbol = "") {
+        let statement = "";
 
         //@ts-ignore
         let instance = new (globalThis[type])(); // This will create a new Dog instance
         let parameters = this.getConstructorParams(instance.constructor.toString());
-        let paramBlock = this.exportParameterBlocks(node, parameters);
+        let paramBlocks = this.exportParameterBlocks(node, parameters, symbol);
 
-        statement += paramBlock
+        statement += paramBlocks[0]
 
-        return statement;
+        return [statement, paramBlocks[1]];
     }
 
     exportNode(
@@ -171,15 +171,19 @@ class Imprint {
 
         let type = this.getNodeType(node);
 
-        let statement = "let " + symbol + " = new " + type;
-        statement += this.exportNodeConstructor(node);
+        let statement = "";
+        let res = this.exportNodeConstructor(node, type, symbol);
+        statement += res[0] + "\n";
 
-        if (parent != null) {
-            statement += parent.name + ".nodes.push(" + symbol + ");\n\n";
-        }
+        let names = res[1] as string[];
+        statement += "let " + symbol + " = new " + type + "(" + names.join(", ") + ");\n\n";
 
         for (let child of node.nodes) {
             statement += this.exportNode(child, node);
+        }
+
+        if (parent != null) {
+            statement += parent.name + ".nodes.push(" + symbol + ");\n\n";
         }
 
         return statement;
@@ -218,11 +222,6 @@ class Imprint {
         let nodes: Node[] = [];
         let xml = pattern.toString();
 
-        if (pattern.type == "text") {
-            nodes.push(new Node(pattern.text));
-            return nodes;
-        }
-
         if (pattern.type == "element") {
             let has_token = xml.includes("[@");
             let has_work = xml.includes("<node");
@@ -256,17 +255,26 @@ class Imprint {
                     nodes.push(...this.recurse(child));
                 }
 
-                let args: { [key: string]: string } = {};
+                let args: { [key: string]: string | Node } = {};
 
                 for (let arg of Object.keys(pattern.attr)) {
                     let token = this.getToken(pattern.attr[arg]);
                     if (token != null) {
                         args[arg] = new Token(token).render();
+                        this.tokens[token] = new Token(token);
                     } else {
                         args[arg] = pattern.attr[arg];
                     }
                 }
-                let res = new XML(pattern.name, "", args);
+
+                let content: string | Token = pattern.val;
+                let token = this.getToken(content);
+                if (token != null) {
+                    content = new Token(token).render();
+                    this.tokens[token] = new Token(token);
+                }
+
+                let res = new XML(pattern.name, content, args);
                 res.nodes = nodes as XML[];
                 return [res];
             }
@@ -283,7 +291,7 @@ class Imprint {
             return null;
         }
 
-        let token = xml.slice(start, end + TOKEN_SYMBOL_END.length);
+        let token = xml.substring(start + TOKEN_SYMBOL_START.length, end);
         return token;
     }
 
