@@ -3,7 +3,6 @@ import { Node } from "../Render/Node/Node";
 import { XmlDocument, XmlElement, type XmlNode } from "xmldoc";
 import { Token } from "../Render/Token/Token";
 import { XML } from "../Render/XML/Xml";
-import { HTML } from "../Render/HTML/Html";
 
 const TOKEN_SYMBOL_START = "[@ ";
 const TOKEN_SYMBOL_END = " @]";
@@ -31,8 +30,6 @@ class Imprint {
     }
 
     /**
-     * getNodeID
-     *
      * Returns a unique identifier for a given node.
      *
      * @param Node $node The node to get the identifier for.
@@ -48,8 +45,6 @@ class Imprint {
     }
 
     /**
-     * exportNodeSymbol
-     *
      * Algorithm to elect a symbol for a node
      * Note: Only element nodes are sent to exportNodeSymbol(), parameter and token nodes have their own exports
      *
@@ -117,7 +112,7 @@ class Imprint {
         return pairs;
     }
 
-    exportParameterBlocks(node: Node, parameters: { [key: string]: any }, name: string = "") {
+    exportParameterBlocks(node: Node, parameters: { [key: string]: any }) {
         let block = "(";
         for (let key of Object.keys(parameters)) {
             key = key.trim().replace(" ", "");
@@ -151,8 +146,7 @@ class Imprint {
         return block;
     }
 
-    exportNodeConstructor(node: Node, name: string, tab = "") {
-        let prepend = "";
+    exportNodeConstructor(node: Node, tab = "") {
         let type = this.getNodeType(node);
 
         let statement = tab;
@@ -160,7 +154,7 @@ class Imprint {
         //@ts-ignore
         let instance = new (globalThis[type])(); // This will create a new Dog instance
         let parameters = this.getConstructorParams(instance.constructor.toString());
-        let paramBlock = this.exportParameterBlocks(node, parameters, name);
+        let paramBlock = this.exportParameterBlocks(node, parameters);
 
         statement += paramBlock
 
@@ -173,13 +167,12 @@ class Imprint {
         export_symbol: string | null = null,
     ) {
         console.log("Exporting node: ", node);
-        let symbol = this.exportNodeSymbol(node);
+        let symbol = export_symbol || this.exportNodeSymbol(node);
 
-        let id = this.getNodeID(node);
         let type = this.getNodeType(node);
 
         let statement = "let " + symbol + " = new " + type;
-        statement += this.exportNodeConstructor(node, symbol, "");
+        statement += this.exportNodeConstructor(node);
 
         if (parent != null) {
             statement += parent.name + ".nodes.push(" + symbol + ");\n\n";
@@ -295,13 +288,12 @@ class Imprint {
     }
 
     preparePattern(pattern: XmlElement) {
-        //
         // TODO: Implement dynamic stuff using type.
         // For now, all of them default to HTML for all xml and Node for attributes
 
         let name = pattern.attr.name;
-        let type = pattern.attr.type;
 
+        // Empty pattern to start the tree
         this.pattern[name] = new Node();
 
         for (let child of pattern.children) {
