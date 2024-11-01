@@ -1,0 +1,27 @@
+<Imprint xmlns:Imprint="Render://approach.local">
+    <Imprint:Pattern name="minimal" type="HTML">
+        <div class="Hello">
+            <p>
+                [@ A @]
+            </p>
+        </div>
+        <p class="[@ B @]">Hello World</p>
+        <a href="noobscience.in" class="hello">NoobScience</a>
+    </Imprint:Pattern>
+    <Imprint:Pattern name="cool" type="HTML">
+        <p>Hello World</p>
+        <div class="[@ wow @]">
+            <p>
+                This is some important content
+            </p>
+            <div>
+                <a href="https://github.com">GitHub</a>
+            </div>
+        </div>
+        <section>
+            <p>
+                This is a section
+            </p>
+        </section>
+    </Imprint:Pattern>
+</Imprint>
