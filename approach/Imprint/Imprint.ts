@@ -11,16 +11,18 @@ class Imprint {
     public tokens: { [key: string]: Token };
     public pattern: { [key: string]: Node };
     public imprint: string;
+    public approach_dir: string;
     public imprint_dir: string;
     public static export_depth = 0;
     public generation_count: { [key: string]: number } = {};
     public _bound: { [key: string]: string } = {};
     public resolved_symbols: { [key: string]: string } = {};
     public found_tokens: { [key: string]: string } = {};
+    public node_types: string[] = [];
 
-    constructor(imprint = "", imprint_dir = "", pattern = {}) {
-    constructor(imprint = '', imprint_dir = '', pattern = {}) {
+    constructor(imprint = '', imprint_dir = '', approach_dir = './', pattern = {}) {
         this.pattern = pattern;
+        this.approach_dir = approach_dir;
         this.imprint = imprint;
         this.imprint_dir = imprint_dir;
         this.tokens = {};
@@ -147,21 +149,20 @@ class Imprint {
                 statement += value + '\n';
             }
 
-            block += statement;
+            block += '\t'.repeat(depth) + statement;
         }
 
         return [block, names];
     }
 
-    exportNodeConstructor(node: Node, type = "", symbol = "") {
-        let statement = "";
+    exportNodeConstructor(node: Node, type = '', symbol = '', depth = 1) {
+        let statement = '';
 
         //@ts-ignore
-        let instance = new (globalThis[type])(); // This will create a new Dog instance
+        let instance = new globalThis[type](); // This will create a new Dog instance
         let parameters = this.getConstructorParams(instance.constructor.toString());
-        let paramBlocks = this.exportParameterBlocks(node, parameters, symbol);
+        let paramBlocks = this.exportParameterBlocks(node, parameters, symbol, depth);
 
-        statement += paramBlocks[0]
         statement += paramBlocks[0];
 
         return [statement, paramBlocks[1]];
@@ -171,37 +172,63 @@ class Imprint {
         node: Node,
         parent: Node | null = null,
         export_symbol: string | null = null,
+        depth = 0
     ) {
-        console.log("Exporting node: ", node);
-        console.log('Exporting node: ', node);
         let symbol = export_symbol || this.exportNodeSymbol(node);
 
         let type = this.getNodeType(node);
+        let tab = '\t'.repeat(depth);
 
-        let res = this.exportNodeConstructor(node, type, symbol);
         let statement = '';
+        let res = this.exportNodeConstructor(node, type, symbol, depth);
         statement += res[0] + '\n';
 
         let names = res[1] as string[];
-        statement += "let " + symbol + " = new " + type + "(" + names.join(", ") + ");\n\n";
+        statement += tab +
+            'let ' + symbol + ' = new ' + type + '(' + names.join(', ') + ');\n\n';
 
         for (let child of node.nodes) {
-            statement += this.exportNode(child, node);
+            statement += this.exportNode(child, node, null, depth + 1);
         }
 
         if (parent != null) {
-            statement += parent.name + ".nodes.push(" + symbol + ");\n\n";
+            statement += tab + parent.name + '.nodes.push(' + symbol + ');\n\n';
         }
 
         return statement;
     }
 
-    print(pattern = "") {
+    patternSetup(pattern: string) {
+        let block = "";
+
+        // Export the import statements
+        for (let type of this.node_types) {
+            block += `import { ${type} } from '${this.approach_dir}/approach/Render/${type}/${type}.ts';\n`;
+        }
+
+        block += '\n';
+
+        block += 'export class ' + pattern + ' extends Node {\n';
+        block += '\ttokens = {};\n\n';
+        block += '\tconstructor(tokens) {\n';
+        block += '\t\tsuper();\n\n';
+        block += '\t\tthis.tokens = tokens;\n\n';
+
+        return block;
+    }
+
+    print(pattern = '') {
         let tree = this.pattern[pattern];
         if (tree == undefined) {
-            throw new Error("Pattern not found: " + pattern);
+            throw new Error('Pattern not found: ' + pattern);
         }
-        let lines = this.exportNode(tree);
+        let lines = this.patternSetup(pattern);
+        lines += this.exportNode(tree, null, null, 2);
+
+
+        lines += '\t\tthis.nodes.push(' + tree.name + ');\n';
+        lines += '\t}\n';
+        lines += '}\n';
 
         return lines;
     }
