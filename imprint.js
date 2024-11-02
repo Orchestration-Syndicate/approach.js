@@ -1,6 +1,6 @@
 import { Imprint } from './approach/Imprint/Imprint';
 
-let imp = new Imprint('./support/patterns/hello.xml', './support');
+let imp = new Imprint('./support/patterns/hello.xml', './support', '..');
 imp.Prepare();
 
-imp.Mint();
+imp.Mint('cool');

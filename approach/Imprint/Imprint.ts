@@ -131,22 +131,45 @@ class Imprint {
             let name = symbol + '_' + key.charAt(0).toUpperCase() + key.slice(1);
             let statement = 'let ' + name + ' = ';
             names.push(name);
-
-            if (value == null || value == undefined) {
-                statement += 'null\n';
-            } else if (typeof value === 'string') {
-                value = value.replace(/"/g, "'");
-                statement += '`' + value + '`;\n';
-            } else if (typeof value === 'number') {
-                statement += value + ';\n';
-            } else if (typeof value === 'boolean') {
-                statement += value + ';\n';
-            } else if (Array.isArray(value)) {
-                statement += '[' + value.join(',') + '];\n';
-            } else if (typeof value === 'object') {
-                statement += JSON.stringify(value) + ';\n';
+            if (value instanceof Token) {
+                statement += 'this.tokens["' + value.content + '"];\n';
             } else {
-                statement += value + '\n';
+                if (value == null || value == undefined) {
+                    statement += 'null\n';
+                } else if (typeof value === 'string') {
+                    value = value.replace(/"/g, "'");
+                    statement += '`' + value + '`;\n';
+                } else if (typeof value === 'number') {
+                    statement += value + ';\n';
+                } else if (typeof value === 'boolean') {
+                    statement += value + ';\n';
+                } else if (Array.isArray(value)) {
+                    statement += '[' + value.join(',') + '];\n';
+                } else if (typeof value === 'object') {
+                    let hasToken = false;
+                    for (let val of Object.values(value)) {
+                        if (val instanceof Token) {
+                            hasToken = true;
+                            break;
+                        }
+                    }
+                    if (!hasToken) {
+                        statement += JSON.stringify(value) + ';\n';
+                    } else {
+                        this.node_types.push('Attribute');
+                        statement += 'new Attribute();\n';
+                        for (let key of Object.keys(value)) {
+                            statement += '\t'.repeat(depth + 1) + name + '.nodes.push(new Attribute("' + key + '", ';
+                            if (value[key] instanceof Token) {
+                                statement += 'this.tokens["' + value[key].content + '"]));\n';
+                            } else {
+                                statement += value[key] + ');\n';
+                            }
+                        }
+                    }
+                } else {
+                    statement += value + '\n';
+                }
             }
 
             block += '\t'.repeat(depth) + statement;
@@ -159,7 +182,7 @@ class Imprint {
         let statement = '';
 
         //@ts-ignore
-        let instance = new globalThis[type](); // This will create a new Dog instance
+        let instance = new globalThis[type]();
         let parameters = this.getConstructorParams(instance.constructor.toString());
         let paramBlocks = this.exportParameterBlocks(node, parameters, symbol, depth);
 
@@ -222,9 +245,9 @@ class Imprint {
         if (tree == undefined) {
             throw new Error('Pattern not found: ' + pattern);
         }
+        let prelines = this.exportNode(tree, null, null, 2);
         let lines = this.patternSetup(pattern);
-        lines += this.exportNode(tree, null, null, 2);
-
+        lines += prelines;
 
         lines += '\t\tthis.nodes.push(' + tree.name + ');\n';
         lines += '\t}\n';
@@ -295,7 +318,7 @@ class Imprint {
                 for (let arg of Object.keys(pattern.attr)) {
                     let token = this.getToken(pattern.attr[arg]);
                     if (token != null) {
-                        args[arg] = new Token(token).render();
+                        args[arg] = new Token(token);
                         this.tokens[token] = new Token(token);
                     } else {
                         args[arg] = pattern.attr[arg];
@@ -305,7 +328,7 @@ class Imprint {
                 let content: string | Token = pattern.val;
                 let token = this.getToken(content);
                 if (token != null) {
-                    content = new Token(token).render();
+                    content = new Token(token);
                     this.tokens[token] = new Token(token);
                 }
 

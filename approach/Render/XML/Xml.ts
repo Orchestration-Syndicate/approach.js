@@ -1,8 +1,11 @@
+import { Attribute } from "../Attribute/Attribute";
 import { Node } from "../Node/Node";
+
+type XMLAttribute = { [key: string]: string | Node } | Attribute;
 
 class XML extends Node {
     public nodes: XML[] = [];
-    public attributes: { [key: string]: string | Node } = {};
+    public attributes: XMLAttribute = new Attribute();
     public tag: string;
     public selfContained: boolean;
     public suffix: string | null = null;
@@ -12,7 +15,7 @@ class XML extends Node {
     public _render_id = 0;
     public static _render_count = 0;
 
-    constructor(tag: string = "", content: string | Node = "", attributes: { [key: string]: string | Node } = {}, selfContained: boolean = false) {
+    constructor(tag: string = "", content: string | Node = "", attributes: XMLAttribute = {}, selfContained: boolean = false) {
         super(content);
         this.set_render_id();
 
@@ -20,7 +23,11 @@ class XML extends Node {
         globalThis.XML = XML;
 
         this.tag = tag;
-        this.attributes = attributes;
+        if (attributes instanceof Attribute && this.attributes instanceof Attribute) {
+            this.attributes.nodes.push(attributes);
+        } else {
+            this.attributes = attributes;
+        }
         this.selfContained = selfContained;
     }
 
@@ -32,8 +39,12 @@ class XML extends Node {
 
     *RenderHead() {
         let attr = "";
-        for (let key in this.attributes) {
-            attr += ` ${key}="${this.attributes[key].toString()}"`;
+        if (this.attributes instanceof Attribute) {
+            attr += " " + this.attributes.render();
+        } else {
+            for (let key in this.attributes) {
+                attr += ` ${key}="${this.attributes[key].toString()}"`;
+            }
         }
 
         if (this.selfContained) {

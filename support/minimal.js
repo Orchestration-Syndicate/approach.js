@@ -1,5 +1,6 @@
 import { XML } from '../approach/Render/XML/XML.ts';
 import { Node } from '../approach/Render/Node/Node.ts';
+import { Attribute } from '../approach/Render/Attribute/Attribute.ts';
 
 export class minimal extends Node {
 	tokens = {};
@@ -22,7 +23,7 @@ export class minimal extends Node {
 			let XML_0 = new XML(XML_0_Tag, XML_0_Content, XML_0_Attributes, XML_0_SelfContained);
 
 				let XML_1_Tag = `p`;
-				let XML_1_Content = `A`;
+				let XML_1_Content = this.tokens["A"];
 				let XML_1_Attributes = {};
 				let XML_1_SelfContained = false;
 
@@ -34,7 +35,8 @@ export class minimal extends Node {
 
 			let XML_2_Tag = `p`;
 			let XML_2_Content = `Hello World`;
-			let XML_2_Attributes = {"class":"B"};
+			let XML_2_Attributes = new Attribute();
+				XML_2_Attributes.nodes.push(new Attribute("class", this.tokens["B"]));
 			let XML_2_SelfContained = false;
 
 			let XML_2 = new XML(XML_2_Tag, XML_2_Content, XML_2_Attributes, XML_2_SelfContained);

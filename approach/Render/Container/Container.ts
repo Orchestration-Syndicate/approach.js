@@ -54,7 +54,11 @@ class Container extends Stream<string> {
     }
 
     * RenderBody(): any {
-        yield this.content.toString();
+        if (this.content instanceof Container) {
+            yield this.content.render();
+        } else {
+            yield this.content;
+        }
 
         for (let node of this.nodes) {
             for (let r of node.stream()) {

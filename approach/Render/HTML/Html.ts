@@ -1,3 +1,4 @@
+import { Attribute } from '../Attribute/Attribute';
 import { XML } from '../XML/Xml';
 
 class HTML extends XML {
@@ -27,15 +28,25 @@ class HTML extends XML {
         globalThis.HTML = HTML;
 
         if (this.classes.length > 0) {
-            this.attributes['class'] = this.classes.join(' ');
+            if (this.attributes instanceof Attribute) {
+                this.attributes.nodes.push(new Attribute('class', this.classes.join(' ')));
+            } else {
+                this.attributes['class'] = this.classes.join(' ');
+            }
         }
         if (this.id && this.id != '') {
-            this.attributes['id'] = this.id;
+            if (this.attributes instanceof Attribute) {
+                this.attributes.nodes.push(new Attribute('id', this.id));
+            } else {
+                this.attributes['id'] = this.id;
+            }
         }
         if (this.styles && Object.keys(this.styles).length > 0) {
-            this.attributes['style'] = Object.keys(this.styles)
-                .map((key) => `${key}: ${this.styles[key]}`)
-                .join('; ');
+            if (this.attributes instanceof Attribute) {
+                this.attributes.nodes.push(new Attribute('style', Object.entries(this.styles).map(([key, value]) => `${key}:${value}`).join(';')));
+            } else {
+                this.attributes['style'] = Object.entries(this.styles).map(([key, value]) => `${key}:${value}`).join(';');
+            }
         }
 
         this.set_render_id();
