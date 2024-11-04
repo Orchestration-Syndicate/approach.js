@@ -7,6 +7,13 @@ import { XML } from '../Render/XML/Xml';
 const TOKEN_SYMBOL_START = '[@ ';
 const TOKEN_SYMBOL_END = ' @]';
 
+/**
+ * Imprint class
+ *
+ * The Imprint class is responsible for preparing and minting patterns.
+ * It reads the imprint file and prepares the patterns for minting.
+ * The patterns are stored in the pattern property and can be minted using the Mint() function.
+ */
 class Imprint {
     public tokens: { [key: string]: Token };
     public pattern: { [key: string]: Node };
@@ -20,6 +27,14 @@ class Imprint {
     public found_tokens: { [key: string]: string } = {};
     public node_types: string[] = [];
 
+    /**
+     * Imprint constructor
+     *
+     * @param string imprint - The path to the imprint file.
+     * @param string imprint_dir - The directory where the imprints are stored.
+     * @param string approach_dir - The directory where the approach is stored.
+     * @param object pattern - The pattern object.
+     */
     constructor(imprint = '', imprint_dir = '', approach_dir = './', pattern = {}) {
         this.pattern = pattern;
         this.approach_dir = approach_dir;
@@ -75,6 +90,12 @@ class Imprint {
         return this.resolved_symbols[id];
     }
 
+    /**
+     * Gets the parameters of a constructor
+     * Uses regex to get the parameters of the constructor
+     *
+     * @param string cls
+     */
     getConstructorParams(cls: string) {
         const constructorRegex = /constructor\s*\(([^)]*)\)/;
         const match = cls.match(constructorRegex);
@@ -116,6 +137,19 @@ class Imprint {
         return pairs;
     }
 
+    /** Exports the parameters of a node
+     * Uses a recurse function to export the parameters of a node
+     * which are defined before the constructor for the node is called
+     * returns a string block and an array of parameter names
+     *
+     * @param Node node
+     * @param parameters
+     * @param string symbol
+     * @param int depth
+     *
+     * @return [string, string[]]
+     *
+     * */
     exportParameterBlocks(
         node: Node,
         parameters: { [key: string]: any },
@@ -178,6 +212,17 @@ class Imprint {
         return [block, names];
     }
 
+    /** Exports the constructor of a node
+     * Uses the constructor of the node to get the parameters and then exports them
+     * It uses regex to get the parameters of the constructor
+     *
+     * @param Node node
+     * @param string type
+     * @param string symbol
+     * @param int depth
+     * @return string
+     *
+     * */
     exportNodeConstructor(node: Node, type = '', symbol = '', depth = 1) {
         let statement = '';
 
@@ -191,6 +236,14 @@ class Imprint {
         return [statement, paramBlocks[1]];
     }
 
+    /** Exports a node to a string
+     *
+     * @param Node node
+     * @param Node|null parent
+     * @param string|null export_symbol
+     * @param int depth
+     * @return string
+     */
     exportNode(
         node: Node,
         parent: Node | null = null,
@@ -221,6 +274,12 @@ class Imprint {
         return statement;
     }
 
+    /**
+     * Adds the necessary imports and the class definition for the minted pattern
+     *
+     * @param string pattern
+     * @returns string
+     */
     patternSetup(pattern: string) {
         let block = "";
 
@@ -240,6 +299,12 @@ class Imprint {
         return block;
     }
 
+    /**
+     * Prints the pattern ie flattens the tree into a string
+     *
+     * @param string pattern
+     * @returns string
+     */
     print(pattern = '') {
         let tree = this.pattern[pattern];
         if (tree == undefined) {
@@ -261,6 +326,14 @@ class Imprint {
         return this.imprint_dir;
     }
 
+    /**
+     * Prepares the imprint file for minting
+     * Call this function before Minting patterns.
+     * Recurses the XML document and prepares the patterns for minting.
+     * The prepared patterns are stored in the pattern property and can be minted using the Mint() function.
+     *
+     * @returns void
+     */
     Prepare() {
         let file_content = fs.readFileSync(this.imprint, 'utf8');
         file_content = file_content.replace(/\s+/g, ' ').replace(/>\s+</g, '><');
@@ -273,6 +346,12 @@ class Imprint {
         }
     }
 
+    /** Recurses the XML document and prepares the patterns for minting 
+     * Differentiates between Node and renderable elements and is responsible for finding tokens
+     *
+     * @param XmlNode pattern 
+     *
+     * */
     recurse(pattern: XmlNode) {
         let nodes: Node[] = [];
         let xml = pattern.toString();
@@ -345,6 +424,12 @@ class Imprint {
         return [];
     }
 
+    /**
+     * Gets the token from the XML string
+     *
+     * @param string xml
+     * @returns string|null
+     */
     getToken(xml: string) {
         let start = xml.indexOf(TOKEN_SYMBOL_START);
         let end = xml.indexOf(TOKEN_SYMBOL_END);
@@ -357,6 +442,11 @@ class Imprint {
         return token;
     }
 
+    /**
+     * Prepares the pattern for minting
+     *
+     * @param XmlElement pattern
+     */
     preparePattern(pattern: XmlElement) {
         // TODO: Implement dynamic stuff using type.
         // For now, all of them default to HTML for all xml and Node for attributes
@@ -371,7 +461,11 @@ class Imprint {
         }
     }
 
-    /** Mints the imprint file @param pattern string */
+    /** Mints the imprint file 
+     *  The Minting process is the process of converting the prepared patterns into Renderable classes.
+     *  Mint can be called on a single pattern or all patterns.
+     *  
+     * @param pattern string */
     Mint(pattern = '') {
         if (pattern == '') {
             for (let pattern of Object.keys(this.pattern)) {

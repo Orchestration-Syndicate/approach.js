@@ -9,6 +9,18 @@ class HTML extends XML {
     public _render_id = 0;
     public static _render_count = 0;
 
+    /** HTML class constructor
+    *
+    * @param string tag - The tag of the HTML element.
+    * @param string id - The id of the HTML element.
+    * @param string[] classes - The classes of the HTML element.
+    * @param attributes - The attributes of the HTML element.
+    * @param string content - The content of the HTML element.
+    * @param styles - The styles of the HTML element.
+    * @param boolean selfContained - Whether or not the HTML element is self-contained.
+    * @param boolean prerender - Whether or not to prerender the HTML element.
+    * @returns HTML
+    * */
     constructor(
         tag: string = 'div',
         id: string | null = null,

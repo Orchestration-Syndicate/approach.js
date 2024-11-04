@@ -1,9 +1,19 @@
 import { Stream } from "../Stream/Stream";
 
+/**
+ * 
+ * This is the Container class, which is the base class for all Approach\Render objects.
+ * 
+ * */
 class Container extends Stream<string> {
     public nodes: Container[];
     public content: string | Container;
 
+    /** Container class constructor
+    *
+    * @param string | Container content - The content of the Container.
+    * @returns Container
+    * */
     constructor(content: string | Container = "") {
         super();
         this.content = content;
