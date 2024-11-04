@@ -148,6 +148,19 @@ class Imprint {
         return filteredArgs;
     }
 
+    /** Exports the parameters of a node
+     * Uses a recurse function to export the parameters of a node
+     * which are defined before the constructor for the node is called
+     * returns a string block and an array of parameter names
+     *
+     * @param Node node
+     * @param parameters
+     * @param string symbol
+     * @param int depth
+     *
+     * @return [string, string[]]
+     *
+     * */
     exportParameterBlocks(
         node: Node,
         parameters: { [key: string]: any },
