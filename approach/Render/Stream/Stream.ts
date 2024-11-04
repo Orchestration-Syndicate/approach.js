@@ -7,6 +7,9 @@ class Stream<T> implements Streamability<T> {
     constructor() {
         this._labeled_nodes = [];
         this._node_labels = [];
+
+        // @ts-ignore
+        globalThis.Stream = Stream;
     }
     render(): T {
         throw new Error("Method not implemented.");

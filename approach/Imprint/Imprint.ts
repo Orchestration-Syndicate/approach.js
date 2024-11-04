@@ -137,6 +137,17 @@ class Imprint {
         return pairs;
     }
 
+    filterConstructorParams(instance: any, args: { [key: string]: any }) {
+        const constructorParams = this.getConstructorParams(instance.constructor.toString());
+        let filteredArgs: { [key: string]: any } = {};
+        for (let param in Object.keys(constructorParams)) {
+            if(param in args){
+                filteredArgs[param] = args[param];
+            }
+        }
+        return filteredArgs;
+    }
+
     /** Exports the parameters of a node
      * Uses a recurse function to export the parameters of a node
      * which are defined before the constructor for the node is called
@@ -235,7 +246,7 @@ class Imprint {
         let statement = "";
 
         //@ts-ignore
-        let instance = new globalThis[type]();
+        let instance = new globalThis[type](...Object.values(args));
         let parameters = this.getConstructorParams(instance.constructor.toString());
         let paramBlocks = this.exportParameterBlocks(node, parameters, symbol, depth);
 
@@ -419,6 +430,12 @@ class Imprint {
                     this.tokens[token] = new Token(token);
                 }
 
+                let type = pattern.attr.type;
+                // @ts-ignore
+                let instance = new globalThis[type]();
+                let filteredArgs = this.filterConstructorParams(instance, args);
+                // @ts-ignore
+                instance = new globalThis[type](...Object.values(filteredArgs));
                 // TODO: Make this dynamic based on render:type
                 if (this.node_types.indexOf("XML") == -1) {
                     this.node_types.push("XML");

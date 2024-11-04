@@ -19,6 +19,9 @@ class Container extends Stream<string> {
         this.content = content;
         this.nodes = [];
 
+        //@ts-ignore
+        globalThis.Container = Container;
+
         return new Proxy(this, {
             get(target: Container, prop: string | symbol): any {
                 if (prop in target) {
