@@ -190,7 +190,9 @@ class Imprint {
                     if (!hasToken) {
                         statement += JSON.stringify(value) + ";\n";
                     } else {
-                        this.node_types.push("Attribute");
+                        if (this.node_types.indexOf("Attribute") == -1) {
+                            this.node_types.push("Attribute");
+                        }
                         statement += "new Attribute();\n";
                         for (let key of Object.keys(value)) {
                             statement +=

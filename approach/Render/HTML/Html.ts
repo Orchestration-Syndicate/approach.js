@@ -61,14 +61,14 @@ class HTML extends XML {
                     new Attribute(
                         "style",
                         Object.entries(this.styles)
-                            .map(([key, value]) => `${key}:${value}`)
+                            .map(([key, value]) => `${key} : ${value} `)
                             .join(";"),
                     ),
                 );
             } else {
                 this.attributes["style"] = Object.entries(this.styles)
-                    .map(([key, value]) => `${key}:${value}`)
-                    .join(";");
+                    .map(([key, value]) => `${key}: ${value}`)
+                    .join("; ");
             }
         }
 
