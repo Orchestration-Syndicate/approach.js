@@ -29,5 +29,4 @@ describe("Pattern Parsing", () => {
         let x = new cool({});
         expect(x).toHaveProperty("render");
     })
-
 });
