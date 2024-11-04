@@ -20,14 +20,14 @@ class Attribute extends Node {
         } else {
             yield this.attribute;
         }
-        yield "=\"";
+        yield '="';
         if (this.value instanceof Node) {
             yield this.value.render();
         } else {
             yield this.value;
         }
-        yield "\" ";
+        yield '" ';
     }
 }
 
-export { Attribute }
+export { Attribute };

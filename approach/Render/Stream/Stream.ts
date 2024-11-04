@@ -26,7 +26,6 @@ class Stream<T> implements Streamability<T> {
     toArray(): any[] {
         throw new Error("Method not implemented.");
     }
-
 }
 
 export { Stream };

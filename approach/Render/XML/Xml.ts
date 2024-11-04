@@ -17,7 +17,7 @@ class XML extends Node {
     public static _render_count = 0;
 
     /**
-     * 
+     *
      * This is the XML class, which is the base class for all Approach\Render objects.
      *
      * @param string tag - The tag of the XML element.
@@ -27,7 +27,12 @@ class XML extends Node {
      *
      * @returns XML
      * */
-    constructor(tag: string = "", content: string | Node = "", attributes: XMLAttribute = {}, selfContained: boolean = false) {
+    constructor(
+        tag: string = "",
+        content: string | Node = "",
+        attributes: XMLAttribute = {},
+        selfContained: boolean = false,
+    ) {
         super(content);
         this.set_render_id();
 
@@ -60,17 +65,17 @@ class XML extends Node {
         }
 
         if (this.selfContained) {
-            yield `${this.before || ''}<${this.tag}${attr} />`;
+            yield `${this.before || ""}<${this.tag}${attr} />`;
         } else {
-            yield `${this.before || ''}<${this.tag}${attr}>${this.prefix || ''}`;
+            yield `${this.before || ""}<${this.tag}${attr}>${this.prefix || ""}`;
         }
     }
 
     *RenderTail() {
         if (!this.selfContained) {
-            yield `${this.suffix || ''}</${this.tag}>${this.after || ''}`;
+            yield `${this.suffix || ""}</${this.tag}>${this.after || ""}`;
         }
-        yield '\n';
+        yield "\n";
     }
 }
 

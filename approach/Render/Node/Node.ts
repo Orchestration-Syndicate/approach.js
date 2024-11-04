@@ -7,9 +7,8 @@ class Node extends Container {
     public nodes: Node[] = [];
     public name = "";
 
-
     /**
-     * 
+     *
      * This is the Node class, which is the base class for all Approach\Render objects.
      *
      * @param string | Node content - The content of the Node.
