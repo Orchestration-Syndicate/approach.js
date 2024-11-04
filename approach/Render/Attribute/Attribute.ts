@@ -1,36 +1,29 @@
 import { Node } from "../Node/Node";
 
 class Attribute extends Node {
-    attribute: string | Node;
-    value: string | Node;
+    attribute: string;
+    value: string;
 
     constructor(name: Node | string = "", value: Node | string = "") {
         super();
-        this.attribute = name;
-        this.value = value;
-
-        // @ts-ignore
-        globalThis.Attribute = Attribute;
+        if (name instanceof Node) {
+            this.attribute = name.render();
+        } else {
+            this.attribute = name;
+        }
+        if (value instanceof Node) {
+            this.value = value.render();
+        } else {
+            this.value = value;
+        }
     }
 
     *RenderHead() {
         if (this.attribute === "") {
             return;
         }
-
-        if (this.attribute instanceof Node) {
-            yield this.attribute.render();
-        } else {
-            yield this.attribute;
-        }
-        yield "=\"";
-        if (this.value instanceof Node) {
-            yield this.value.render();
-        } else {
-            yield this.value;
-        }
-        yield "\" ";
+        yield `${this.attribute}="${this.value}" `;
     }
 }
 
-export { Attribute }
+export { Attribute };

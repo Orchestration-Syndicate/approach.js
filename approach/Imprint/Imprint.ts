@@ -1,12 +1,19 @@
-import * as fs from 'fs';
-import { Node } from '../Render/Node/Node';
-import { XmlDocument, XmlElement, type XmlNode } from 'xmldoc';
-import { Token } from '../Render/Token/Token';
-import { XML } from '../Render/XML/Xml';
+import * as fs from "fs";
+import { Node } from "../Render/Node/Node";
+import { XmlDocument, XmlElement, type XmlNode } from "xmldoc";
+import { Token } from "../Render/Token/Token";
+import { XML } from "../Render/XML/Xml";
 
-const TOKEN_SYMBOL_START = '[@ ';
-const TOKEN_SYMBOL_END = ' @]';
+const TOKEN_SYMBOL_START = "[@ ";
+const TOKEN_SYMBOL_END = " @]";
 
+/**
+ * Imprint class
+ *
+ * The Imprint class is responsible for preparing and minting patterns.
+ * It reads the imprint file and prepares the patterns for minting.
+ * The patterns are stored in the pattern property and can be minted using the Mint() function.
+ */
 class Imprint {
     public tokens: { [key: string]: Token };
     public pattern: { [key: string]: Node };
@@ -20,7 +27,15 @@ class Imprint {
     public found_tokens: { [key: string]: string } = {};
     public node_types: string[] = [];
 
-    constructor(imprint = '', imprint_dir = '', approach_dir = './', pattern = {}) {
+    /**
+     * Imprint constructor
+     *
+     * @param string imprint - The path to the imprint file.
+     * @param string imprint_dir - The directory where the imprints are stored.
+     * @param string approach_dir - The directory where the approach is stored.
+     * @param object pattern - The pattern object.
+     */
+    constructor(imprint = "", imprint_dir = "", approach_dir = "./", pattern = {}) {
         this.pattern = pattern;
         this.approach_dir = approach_dir;
         this.imprint = imprint;
@@ -41,8 +56,8 @@ class Imprint {
     getNodeID(node: Node) {
         let id: string = String(node._render_id);
         let type = this.getNodeType(node);
-        if (type == 'Token') {
-            id = 't-' + id;
+        if (type == "Token") {
+            id = "t-" + id;
         }
         return id;
     }
@@ -62,12 +77,12 @@ class Imprint {
             this.generation_count[type] = 0;
         }
 
-        if (type === 'Token') {
-            this._bound[id] = 'this.tokens[' + node.name + ']';
+        if (type === "Token") {
+            this._bound[id] = "this.tokens[" + node.name + "]";
             this.found_tokens[node.name] = id;
         }
 
-        this.resolved_symbols[id] = type + '_' + this.generation_count[type];
+        this.resolved_symbols[id] = type + "_" + this.generation_count[type];
         this.generation_count[type]++;
 
         node.name = this.resolved_symbols[id];
@@ -75,38 +90,44 @@ class Imprint {
         return this.resolved_symbols[id];
     }
 
+    /**
+     * Gets the parameters of a constructor
+     * Uses regex to get the parameters of the constructor
+     *
+     * @param string cls
+     */
     getConstructorParams(cls: string) {
         const constructorRegex = /constructor\s*\(([^)]*)\)/;
         const match = cls.match(constructorRegex);
         let res: string[] = [];
 
         if (match && match[1]) {
-            res = match[1].split(',').map((arg: string) => arg.trim());
+            res = match[1].split(",").map((arg: string) => arg.trim());
         }
 
         // Split it into key value pairs
         let pairs: { [key: string]: any } = {};
         res.forEach((pair) => {
-            let [key, value] = pair.split('=');
+            let [key, value] = pair.split("=");
             if (value == undefined) {
                 pairs[key] = null;
             } else {
                 if (value.includes('"')) {
-                    pairs[key] = value.replace(/"/g, '');
-                } else if (value.includes('!')) {
-                    if (value.includes('1')) {
+                    pairs[key] = value.replace(/"/g, "");
+                } else if (value.includes("!")) {
+                    if (value.includes("1")) {
                         pairs[key] = false;
                     } else {
                         pairs[key] = true;
                     }
                 } else if (!isNaN(Number(value))) {
                     pairs[key] = Number(value);
-                } else if (value.includes('null')) {
+                } else if (value.includes("null")) {
                     pairs[key] = null;
-                } else if (value.includes('[')) {
-                    pairs[key] = value.split('[').join('').split(']').join('').split(',');
-                } else if (value.includes('{')) {
-                    pairs[key] = value.split('{').join('').split('}').join('').split(',');
+                } else if (value.includes("[")) {
+                    pairs[key] = value.split("[").join("").split("]").join("").split(",");
+                } else if (value.includes("{")) {
+                    pairs[key] = value.split("{").join("").split("}").join("").split(",");
                 } else {
                     pairs[key] = value;
                 }
@@ -130,33 +151,33 @@ class Imprint {
     exportParameterBlocks(
         node: Node,
         parameters: { [key: string]: any },
-        symbol = '',
-        depth = 1
+        symbol = "",
+        depth = 1,
     ) {
-        let block = '';
+        let block = "";
         let names = [];
         for (let key of Object.keys(parameters)) {
-            key = key.trim().replace(' ', '');
+            key = key.trim().replace(" ", "");
             //@ts-ignore
             let value = node[key] !== undefined ? node[key] : parameters[key];
-            let name = symbol + '_' + key.charAt(0).toUpperCase() + key.slice(1);
-            let statement = 'let ' + name + ' = ';
+            let name = symbol + "_" + key.charAt(0).toUpperCase() + key.slice(1);
+            let statement = "let " + name + " = ";
             names.push(name);
             if (value instanceof Token) {
                 statement += 'this.tokens["' + value.content + '"];\n';
             } else {
                 if (value == null || value == undefined) {
-                    statement += 'null\n';
-                } else if (typeof value === 'string') {
+                    statement += "null\n";
+                } else if (typeof value === "string") {
                     value = value.replace(/"/g, "'");
-                    statement += '`' + value + '`;\n';
-                } else if (typeof value === 'number') {
-                    statement += value + ';\n';
-                } else if (typeof value === 'boolean') {
-                    statement += value + ';\n';
+                    statement += "`" + value + "`;\n";
+                } else if (typeof value === "number") {
+                    statement += value + ";\n";
+                } else if (typeof value === "boolean") {
+                    statement += value + ";\n";
                 } else if (Array.isArray(value)) {
-                    statement += '[' + value.join(',') + '];\n';
-                } else if (typeof value === 'object') {
+                    statement += "[" + value.join(",") + "];\n";
+                } else if (typeof value === "object") {
                     let hasToken = false;
                     for (let val of Object.values(value)) {
                         if (val instanceof Token) {
@@ -165,32 +186,51 @@ class Imprint {
                         }
                     }
                     if (!hasToken) {
-                        statement += JSON.stringify(value) + ';\n';
+                        statement += JSON.stringify(value) + ";\n";
                     } else {
-                        this.node_types.push('Attribute');
-                        statement += 'new Attribute();\n';
+                        if (this.node_types.indexOf("Attribute") == -1) {
+                            this.node_types.push("Attribute");
+                        }
+                        statement += "new Attribute();\n";
                         for (let key of Object.keys(value)) {
-                            statement += '\t'.repeat(depth + 1) + name + '.nodes.push(new Attribute("' + key + '", ';
+                            statement +=
+                                "\t".repeat(depth + 1) +
+                                name +
+                                '.nodes.push(new Attribute("' +
+                                key +
+                                '", ';
                             if (value[key] instanceof Token) {
-                                statement += 'this.tokens["' + value[key].content + '"]));\n';
+                                statement +=
+                                    'this.tokens["' + value[key].content + '"]));\n';
                             } else {
-                                statement += value[key] + ');\n';
+                                statement += value[key] + ");\n";
                             }
                         }
                     }
                 } else {
-                    statement += value + '\n';
+                    statement += value + "\n";
                 }
             }
 
-            block += '\t'.repeat(depth) + statement;
+            block += "\t".repeat(depth) + statement;
         }
 
         return [block, names];
     }
 
-    exportNodeConstructor(node: Node, type = '', symbol = '', depth = 1) {
-        let statement = '';
+    /** Exports the constructor of a node
+     * Uses the constructor of the node to get the parameters and then exports them
+     * It uses regex to get the parameters of the constructor
+     *
+     * @param Node node
+     * @param string type
+     * @param string symbol
+     * @param int depth
+     * @return string
+     *
+     * */
+    exportNodeConstructor(node: Node, type = "", symbol = "", depth = 1) {
+        let statement = "";
 
         //@ts-ignore
         let instance = new globalThis[type](...Object.values(args));
@@ -202,36 +242,50 @@ class Imprint {
         return [statement, paramBlocks[1]];
     }
 
+    /** Exports a node to a string
+     *
+     * @param Node node
+     * @param Node|null parent
+     * @param string|null export_symbol
+     * @param int depth
+     * @return string
+     */
     exportNode(
         node: Node,
         parent: Node | null = null,
         export_symbol: string | null = null,
-        depth = 0
+        depth = 0,
     ) {
         let symbol = export_symbol || this.exportNodeSymbol(node);
 
         let type = this.getNodeType(node);
-        let tab = '\t'.repeat(depth);
+        let tab = "\t".repeat(depth);
 
-        let statement = '';
+        let statement = "";
         let res = this.exportNodeConstructor(node, type, symbol, depth);
-        statement += res[0] + '\n';
+        statement += res[0] + "\n";
 
         let names = res[1] as string[];
-        statement += tab +
-            'let ' + symbol + ' = new ' + type + '(' + names.join(', ') + ');\n\n';
+        statement +=
+            tab + "let " + symbol + " = new " + type + "(" + names.join(", ") + ");\n\n";
 
         for (let child of node.nodes) {
             statement += this.exportNode(child, node, null, depth + 1);
         }
 
         if (parent != null) {
-            statement += tab + parent.name + '.nodes.push(' + symbol + ');\n\n';
+            statement += tab + parent.name + ".nodes.push(" + symbol + ");\n\n";
         }
 
         return statement;
     }
 
+    /**
+     * Adds the necessary imports and the class definition for the minted pattern
+     *
+     * @param string pattern
+     * @returns string
+     */
     patternSetup(pattern: string) {
         let block = "";
 
@@ -240,29 +294,35 @@ class Imprint {
             block += `import { ${type} } from '${this.approach_dir}/approach/Render/${type}/${type}.ts';\n`;
         }
 
-        block += '\n';
+        block += "\n";
 
-        block += 'export class ' + pattern + ' extends Node {\n';
-        block += '\ttokens = {};\n\n';
-        block += '\tconstructor(tokens) {\n';
-        block += '\t\tsuper();\n\n';
-        block += '\t\tthis.tokens = tokens;\n\n';
+        block += "export class " + pattern + " extends Node {\n";
+        block += "\ttokens = {};\n\n";
+        block += "\tconstructor(tokens) {\n";
+        block += "\t\tsuper();\n\n";
+        block += "\t\tthis.tokens = tokens;\n\n";
 
         return block;
     }
 
-    print(pattern = '') {
+    /**
+     * Prints the pattern ie flattens the tree into a string
+     *
+     * @param string pattern
+     * @returns string
+     */
+    print(pattern = "") {
         let tree = this.pattern[pattern];
         if (tree == undefined) {
-            throw new Error('Pattern not found: ' + pattern);
+            throw new Error("Pattern not found: " + pattern);
         }
         let prelines = this.exportNode(tree, null, null, 2);
         let lines = this.patternSetup(pattern);
         lines += prelines;
 
-        lines += '\t\tthis.nodes.push(' + tree.name + ');\n';
-        lines += '\t}\n';
-        lines += '}\n';
+        lines += "\t\tthis.nodes.push(" + tree.name + ");\n";
+        lines += "\t}\n";
+        lines += "}\n";
 
         return lines;
     }
@@ -272,34 +332,48 @@ class Imprint {
         return this.imprint_dir;
     }
 
+    /**
+     * Prepares the imprint file for minting
+     * Call this function before Minting patterns.
+     * Recurses the XML document and prepares the patterns for minting.
+     * The prepared patterns are stored in the pattern property and can be minted using the Mint() function.
+     *
+     * @returns void
+     */
     Prepare() {
-        let file_content = fs.readFileSync(this.imprint, 'utf8');
-        file_content = file_content.replace(/\s+/g, ' ').replace(/>\s+</g, '><');
+        let file_content = fs.readFileSync(this.imprint, "utf8");
+        file_content = file_content.replace(/\s+/g, " ").replace(/>\s+</g, "><");
 
         let xml = new XmlDocument(file_content);
-        let tree = xml.childrenNamed('Imprint:Pattern');
+        let tree = xml.childrenNamed("Imprint:Pattern");
 
         for (let pattern of tree) {
             this.preparePattern(pattern);
         }
     }
 
+    /** Recurses the XML document and prepares the patterns for minting
+     * Differentiates between Node and renderable elements and is responsible for finding tokens
+     *
+     * @param XmlNode pattern
+     *
+     * */
     recurse(pattern: XmlNode) {
         let nodes: Node[] = [];
         let xml = pattern.toString();
 
-        if (pattern.type == 'element') {
-            let has_token = xml.includes('[@');
-            let has_work = xml.includes('<node');
-            let has_render = xml.includes('<Render');
-            let has_imprint = xml.includes('<Imprint');
-            let has_resource = xml.includes('<Resource');
-            let has_component = xml.includes('<Component');
-            let has_composition = xml.includes('<Composition');
-            let has_service = xml.includes('<Service');
-            let has_instrument = xml.includes('<Instrument');
-            let has_ensemble = xml.includes('<Ensemble');
-            let has_orchestra = xml.includes('<Orchestra');
+        if (pattern.type == "element") {
+            let has_token = xml.includes("[@");
+            let has_work = xml.includes("<node");
+            let has_render = xml.includes("<Render");
+            let has_imprint = xml.includes("<Imprint");
+            let has_resource = xml.includes("<Resource");
+            let has_component = xml.includes("<Component");
+            let has_composition = xml.includes("<Composition");
+            let has_service = xml.includes("<Service");
+            let has_instrument = xml.includes("<Instrument");
+            let has_ensemble = xml.includes("<Ensemble");
+            let has_orchestra = xml.includes("<Orchestra");
 
             let has_imprint_concept =
                 has_token ||
@@ -315,8 +389,8 @@ class Imprint {
                 has_orchestra;
 
             if (!has_imprint_concept) {
-                if (this.node_types.indexOf('Node') == -1) {
-                    this.node_types.push('Node');
+                if (this.node_types.indexOf("Node") == -1) {
+                    this.node_types.push("Node");
                 }
                 return [new Node(xml)];
             } else {
@@ -350,8 +424,8 @@ class Imprint {
                 // @ts-ignore
                 instance = new globalThis[type](...Object.values(filteredArgs));
                 // TODO: Make this dynamic based on render:type
-                if (this.node_types.indexOf('XML') == -1) {
-                    this.node_types.push('XML');
+                if (this.node_types.indexOf("XML") == -1) {
+                    this.node_types.push("XML");
                 }
                 let res = new XML(pattern.name, content, args);
                 res.nodes = nodes as XML[];
@@ -362,6 +436,12 @@ class Imprint {
         return [];
     }
 
+    /**
+     * Gets the token from the XML string
+     *
+     * @param string xml
+     * @returns string|null
+     */
     getToken(xml: string) {
         let start = xml.indexOf(TOKEN_SYMBOL_START);
         let end = xml.indexOf(TOKEN_SYMBOL_END);
@@ -374,6 +454,11 @@ class Imprint {
         return token;
     }
 
+    /**
+     * Prepares the pattern for minting
+     *
+     * @param XmlElement pattern
+     */
     preparePattern(pattern: XmlElement) {
         // TODO: Implement dynamic stuff using type.
         // For now, all of them default to HTML for all xml and Node for attributes
@@ -388,17 +473,21 @@ class Imprint {
         }
     }
 
-    /** Mints the imprint file @param pattern string */
-    Mint(pattern = '') {
-        if (pattern == '') {
+    /** Mints the imprint file
+     *  The Minting process is the process of converting the prepared patterns into Renderable classes.
+     *  Mint can be called on a single pattern or all patterns.
+     *
+     * @param pattern string */
+    Mint(pattern = "") {
+        if (pattern == "") {
             for (let pattern of Object.keys(this.pattern)) {
                 this.Mint(pattern);
             }
         } else {
             let content = this.print(pattern);
             let imprint_dir = this.getImprintFileDir();
-            let pattern_path = imprint_dir + '/' + pattern + '.js';
-            console.log('Minting: ' + pattern_path);
+            let pattern_path = imprint_dir + "/" + pattern + ".js";
+            console.log("Minting: " + pattern_path);
             if (!fs.existsSync(imprint_dir)) {
                 fs.mkdirSync(imprint_dir, { recursive: true });
             }

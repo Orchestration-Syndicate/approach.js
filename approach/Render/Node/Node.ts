@@ -7,6 +7,15 @@ class Node extends Container {
     public nodes: Node[] = [];
     public name = "";
 
+    /**
+     *
+     * This is the Node class, which is the base class for all Approach\Render objects.
+     *
+     * @param string | Node content - The content of the Node.
+     * @param boolean prerender - Whether or not to prerender the Node.
+     *
+     * @returns Node
+     */
     constructor(content: string | Node = "", prerender = false) {
         super(content);
         //@ts-ignore
