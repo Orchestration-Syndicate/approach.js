@@ -8,6 +8,9 @@ class Attribute extends Node {
         super();
         this.attribute = name;
         this.value = value;
+
+        // @ts-ignore
+        globalThis.Attribute = Attribute;
     }
 
     *RenderHead() {
