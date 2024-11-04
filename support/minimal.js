@@ -1,4 +1,4 @@
-import { XML } from '../approach/Render/XML/Xml.ts';
+import { XML } from '../approach/Render/XML/XML.ts';
 import { Node } from '../approach/Render/Node/Node.ts';
 import { Attribute } from '../approach/Render/Attribute/Attribute.ts';
 
