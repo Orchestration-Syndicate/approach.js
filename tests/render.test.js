@@ -40,10 +40,10 @@ describe("Html", () => {
         let classes = ['class1', 'class2'];
         let selfContained = false;
         let id = 'test-id';
-        let styles = {color: 'red', 'font-size': '16px'};
+        let styles = { color: 'red', 'font-size': '16px' };
 
         let htmlElement = new HTML(tag, id, classes, attributes, content, styles, selfContained);
-        
+
         expect(htmlElement.tag).toBe(tag);
         expect(htmlElement.content).toBe(content);
         expect(htmlElement.attributes['class']).toBe('class1 class2');
@@ -58,7 +58,7 @@ describe("Html", () => {
         let classes = ['class1', 'class2'];
         let selfContained = false;
         let id = 'test-id';
-        let styles = {color: 'red', 'font-size': '16px'};
+        let styles = { color: 'red', 'font-size': '16px' };
 
         let htmlElement = new HTML(tag, id, classes, attributes, content, styles, selfContained);
         let expectedOutput = "<div class=\"class1 class2\" id=\"test-id\" style=\"color: red; font-size: 16px\">Hello World</div>\n";
