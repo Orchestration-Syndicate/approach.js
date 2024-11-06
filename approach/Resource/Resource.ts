@@ -52,3 +52,5 @@ class Resource extends Node {
         return null;
     }
 }
+
+export { Resource };
