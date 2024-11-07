@@ -162,7 +162,7 @@ abstract class discoverability {
             case discoverability.access:
                 config['access'] = this.define_access(caller);
                 break
-            default:
+            case null:
                 config['container'] = this.define_container(caller);
                 config['operation'] = this.define_operation(caller);
                 config['field'] = this.define_field(caller);
@@ -171,6 +171,20 @@ abstract class discoverability {
                 config['map'] = this.define_map(caller);
                 config['state'] = this.define_state(caller);
                 config['access'] = this.define_access(caller);
+                break
+            default:
+                break
+        }
+
+        for(let c in Object.keys(config)){
+            let aspect = config[c];
+
+            aspect['package'] = caller.get_aspect_package();
+            aspect['which'] = c;
+            aspect['filename'] = c + '.php';
+            aspect['directory'] = caller.get_aspect_directory();
+
+            //this.MintAspect(aspect);
         }
     }
 
