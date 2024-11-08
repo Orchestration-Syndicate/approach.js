@@ -78,7 +78,6 @@ class Resource extends Node {
             if (part === '') {
                 continue;
             }
-            console.log(part);
             if (part.includes('[')) {
                 // get all the indices of the opening brackets and close brackets
                 let indices = [];
@@ -96,28 +95,71 @@ class Resource extends Node {
                 // get all the part before the first opening bracket
                 let first = indices[0][0];
                 let field_name = part.slice(0, first);
-                console.log(field_name);
 
-                let result = [];
-                for(let bracket of indices) {
+                let result: any[] = [field_name, []];
+                for (let bracket of indices) {
                     let content = part.slice(bracket[0] + 1, bracket[1]);
                     let splitters = ['AND', 'OR', 'HAS'];
+                    let ops = ['le', 'gt', 'lt', 'ge', 'eq', 'ne'];
                     let split = [];
+                    let to = []
+                    let current = '';
 
+                    // split the content by the splitters
+                    for (let i = 0; i < content.length; i++) {
+                        if (splitters.includes(content.slice(i, i + 3))) {
+                            split.push(current);
+                            current = '';
+                            i += 2;
+                        } else {
+                            current += content[i];
+                        }
+                    }
+
+                    split.push(current);
+
+                    for (let s of split) {
+                        let fields = s.split(',');
+                        let r = [];
+                        for (let f of fields) {
+                            if (f.includes(':')) {
+                                let [key, value] = f.split(':');
+                                r.push([key, value]);
+                            } else {
+                                let is_op = false;
+                                for (let op of ops) {
+                                    if (f.includes(op)) {
+                                        let [key, value] = f.split(op);
+                                        r.push([key, op, value]);
+                                        is_op = true;
+                                    }
+                                }
+
+                                if (!is_op) {
+                                    r.push([f]);
+                                }
+                            }
+                        }
+                        to.push(r);
+                    }
+
+                    result[1].push(to);
                 }
 
                 // check if there is anything else after the last closing bracket
                 let last = indices[indices.length - 1][1];
                 if (last < part.length - 1 && part[last + 1] === '.') {
                     let function_name = part.slice(last + 2);
+                    result.push(function_name);
                 }
-                console.log(indices);
+                res['paths'].push(result);
+                //console.log(indices);
             } else {
                 res['paths'].push([part]);
             }
         }
 
-        return null
+        return res
     }
 }
 
