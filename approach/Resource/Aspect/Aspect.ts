@@ -41,13 +41,13 @@ class Aspect extends Container {
         parent: Container | null = null,
         ancestor: Container | null = null
     ) {
-        super(content ?? "");
+        super({content:  content ?? ""});
 
         if (parent === null) {
-            parent = new Container();
+            parent = new Container({});
         }
         if (ancestor === null) {
-            ancestor = new Container();
+            ancestor = new Container({});
         }
 
         this.parent = parent;

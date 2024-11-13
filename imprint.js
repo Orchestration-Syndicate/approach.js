@@ -1,6 +1,15 @@
-import { Imprint } from './approach/Imprint/Imprint';
+import { Imprint } from "./approach/Imprint/Imprint";
+import { XML } from "./approach/Render/XML/Xml";
 
-let imp = new Imprint('./support/patterns/hello.xml', './support', '..');
+let x = new XML({});
+
+let imp = new Imprint({
+    imprint: "./support/patterns/hello.xml",
+    imprint_dir: "./support",
+    approach_dir: "..",
+});
 imp.Prepare();
 
-imp.Mint('cool');
+console.log(imp.getConstructorParams(x.constructor.toString()));
+
+ imp.Mint("minimal");

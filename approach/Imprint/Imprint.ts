@@ -30,12 +30,19 @@ class Imprint {
     /**
      * Imprint constructor
      *
-     * @param string imprint - The path to the imprint file.
-     * @param string imprint_dir - The directory where the imprints are stored.
-     * @param string approach_dir - The directory where the approach is stored.
-     * @param object pattern - The pattern object.
+     * @param object
      */
-    constructor(imprint = "", imprint_dir = "", approach_dir = "./", pattern = {}) {
+    constructor({
+        imprint = "",
+        imprint_dir = "",
+        approach_dir = "./",
+        pattern = {},
+    }: {
+        imprint: string;
+        imprint_dir: string;
+        approach_dir: string;
+        pattern: { [key: string]: Node };
+    }) {
         this.pattern = pattern;
         this.approach_dir = approach_dir;
         this.imprint = imprint;
@@ -102,6 +109,7 @@ class Imprint {
         let res: string[] = [];
 
         if (match && match[1]) {
+            match[1] = match[1][0] == "{" ? match[1].slice(1, -1) : match[1];
             res = match[1].split(",").map((arg: string) => arg.trim());
         }
 
@@ -138,10 +146,12 @@ class Imprint {
     }
 
     filterConstructorParams(instance: any, args: { [key: string]: any }) {
-        const constructorParams = this.getConstructorParams(instance.constructor.toString());
+        const constructorParams = this.getConstructorParams(
+            instance.constructor.toString(),
+        );
         let filteredArgs: { [key: string]: any } = {};
         for (let param in Object.keys(constructorParams)) {
-            if(param in args){
+            if (param in args) {
                 filteredArgs[param] = args[param];
             }
         }
@@ -209,12 +219,12 @@ class Imprint {
                             statement +=
                                 "\t".repeat(depth + 1) +
                                 name +
-                                '.nodes.push(new Attribute("' +
+                                '.nodes.push(new Attribute({ name: "' +
                                 key +
-                                '", ';
+                                '", value: ';
                             if (value[key] instanceof Token) {
                                 statement +=
-                                    'this.tokens["' + value[key].content + '"]));\n';
+                                    'this.tokens["' + value[key].content + '"]}));\n';
                             } else {
                                 statement += value[key] + ");\n";
                             }
@@ -246,13 +256,13 @@ class Imprint {
         let statement = "";
 
         //@ts-ignore
-        let instance = new globalThis[type](...Object.values(args));
+        let instance = new globalThis[type]({});
         let parameters = this.getConstructorParams(instance.constructor.toString());
         let paramBlocks = this.exportParameterBlocks(node, parameters, symbol, depth);
 
         statement += paramBlocks[0];
 
-        return [statement, paramBlocks[1]];
+        return [statement, paramBlocks[1], Object.keys(parameters)];
     }
 
     /** Exports a node to a string
@@ -279,8 +289,16 @@ class Imprint {
         statement += res[0] + "\n";
 
         let names = res[1] as string[];
+        let types = res[2] as string[];
         statement +=
-            tab + "let " + symbol + " = new " + type + "(" + names.join(", ") + ");\n\n";
+            tab + "let " + symbol + " = new " + type + "({";
+        for (let i = 0; i < names.length; i++) {
+            statement += types[i] + ": " + names[i];
+            if (i < names.length - 1) {
+                statement += ", ";
+            }
+        }
+        statement += "});\n\n";
 
         for (let child of node.nodes) {
             statement += this.exportNode(child, node, null, depth + 1);
@@ -405,7 +423,7 @@ class Imprint {
                 if (this.node_types.indexOf("Node") == -1) {
                     this.node_types.push("Node");
                 }
-                return [new Node(xml)];
+                return [new Node({ content: xml })];
             } else {
                 for (let child of pattern.children) {
                     nodes.push(...this.recurse(child));
@@ -416,8 +434,8 @@ class Imprint {
                 for (let arg of Object.keys(pattern.attr)) {
                     let token = this.getToken(pattern.attr[arg]);
                     if (token != null) {
-                        args[arg] = new Token(token);
-                        this.tokens[token] = new Token(token);
+                        args[arg] = new Token({ content: token });
+                        this.tokens[token] = new Token({ content: token });
                     } else {
                         args[arg] = pattern.attr[arg];
                     }
@@ -426,21 +444,26 @@ class Imprint {
                 let content: string | Token = pattern.val;
                 let token = this.getToken(content);
                 if (token != null) {
-                    content = new Token(token);
-                    this.tokens[token] = new Token(token);
+                    content = new Token({ content: token });
+                    this.tokens[token] = new Token({ content: token });
                 }
 
-                let type = pattern.attr.type;
+                // let type = pattern.attr.type;
+                // console.log(type)
+                // // @ts-ignore
+                // let instance = new globalThis[type]({});
+                // let filteredArgs = this.filterConstructorParams(instance, args);
                 // @ts-ignore
-                let instance = new globalThis[type]();
-                let filteredArgs = this.filterConstructorParams(instance, args);
-                // @ts-ignore
-                instance = new globalThis[type](...Object.values(filteredArgs));
+                // instance = new globalThis[type](...Object.values(filteredArgs));
                 // TODO: Make this dynamic based on render:type
                 if (this.node_types.indexOf("XML") == -1) {
                     this.node_types.push("XML");
                 }
-                let res = new XML(pattern.name, content, args);
+                let res = new XML({
+                    tag: pattern.name,
+                    content: content,
+                    attributes: args,
+                });
                 res.nodes = nodes as XML[];
                 return [res];
             }
@@ -479,7 +502,7 @@ class Imprint {
         let name = pattern.attr.name;
 
         // Empty pattern to start the tree
-        this.pattern[name] = new Node();
+        this.pattern[name] = new Node({});
 
         for (let child of pattern.children) {
             this.pattern[name].nodes.push(...this.recurse(child));

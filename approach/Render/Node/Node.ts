@@ -11,13 +11,19 @@ class Node extends Container {
      *
      * This is the Node class, which is the base class for all Approach\Render objects.
      *
-     * @param string | Node content - The content of the Node.
-     * @param boolean prerender - Whether or not to prerender the Node.
+     * @param obj: { content?: string | Node, prerender?: boolean }
      *
      * @returns Node
      */
-    constructor(content: string | Node = "", prerender = false) {
-        super(content);
+    constructor({
+        content = "",
+        prerender = false,
+    }: {
+        content?: string | Node;
+        prerender?: boolean;
+    }) {
+        super({ content });
+
         //@ts-ignore
         globalThis.Node = Node;
         this.prerender = prerender;

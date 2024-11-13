@@ -13,27 +13,27 @@ export class cool extends Node {
 		let Node_0_Content = ``;
 		let Node_0_Prerender = false;
 
-		let Node_0 = new Node(Node_0_Content, Node_0_Prerender);
+		let Node_0 = new Node({content : Node_0_Content, prerender : Node_0_Prerender});
 
 			let Node_1_Content = `<p>Hello World</p>`;
 			let Node_1_Prerender = false;
 
-			let Node_1 = new Node(Node_1_Content, Node_1_Prerender);
+			let Node_1 = new Node({content : Node_1_Content, prerender : Node_1_Prerender});
 
 			Node_0.nodes.push(Node_1);
 
 			let XML_0_Tag = `div`;
 			let XML_0_Content = ``;
 			let XML_0_Attributes = new Attribute();
-				XML_0_Attributes.nodes.push(new Attribute("class", this.tokens["wow"]));
+				XML_0_Attributes.nodes.push(new Attribute({ name: "class", value: this.tokens["wow"]}));
 			let XML_0_SelfContained = false;
 
-			let XML_0 = new XML(XML_0_Tag, XML_0_Content, XML_0_Attributes, XML_0_SelfContained);
+			let XML_0 = new XML({tag : XML_0_Tag, content : XML_0_Content, attributes : XML_0_Attributes, selfContained : XML_0_SelfContained});
 
 				let Node_2_Content = `<p>This is some important content</p>`;
 				let Node_2_Prerender = false;
 
-				let Node_2 = new Node(Node_2_Content, Node_2_Prerender);
+				let Node_2 = new Node({content : Node_2_Content, prerender : Node_2_Prerender});
 
 				XML_0.nodes.push(Node_2);
 
@@ -42,7 +42,7 @@ export class cool extends Node {
 </div>`;
 				let Node_3_Prerender = false;
 
-				let Node_3 = new Node(Node_3_Content, Node_3_Prerender);
+				let Node_3 = new Node({content : Node_3_Content, prerender : Node_3_Prerender});
 
 				XML_0.nodes.push(Node_3);
 
@@ -53,7 +53,7 @@ export class cool extends Node {
 </section>`;
 			let Node_4_Prerender = false;
 
-			let Node_4 = new Node(Node_4_Content, Node_4_Prerender);
+			let Node_4 = new Node({content : Node_4_Content, prerender : Node_4_Prerender});
 
 			Node_0.nodes.push(Node_4);
 

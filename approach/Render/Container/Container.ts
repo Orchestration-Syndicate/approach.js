@@ -1,20 +1,20 @@
 import { Stream } from "../Stream/Stream";
 
 /**
- * 
+ *
  * This is the Container class, which is the base class for all Approach\Render objects.
- * 
+ *
  * */
 class Container extends Stream<string> {
     public nodes: Container[];
     public content: string | Container;
 
     /** Container class constructor
-    *
-    * @param string | Container content - The content of the Container.
-    * @returns Container
-    * */
-    constructor(content: string | Container = "") {
+     *
+     * @param obj: { content?: string | Container }
+     * @returns Container
+     * */
+    constructor({ content = "" }: { content?: string | Container }) {
         super();
         this.content = content;
         this.nodes = [];
@@ -51,22 +51,21 @@ class Container extends Stream<string> {
                 (target as any)[prop] = value;
                 return true;
             },
-            // HACK: I am not sure if this would actuall work 
+            // HACK: I am not sure if this would actuall work
             has(target: Container, prop: string | symbol): boolean {
                 if (isNaN(Number(prop))) {
                     return prop in target || target._node_labels.includes(prop as string);
                 }
                 return prop in target || prop in target._labeled_nodes;
-            }
+            },
         });
-
     }
 
-    * RenderHead() {
-        yield '';
+    *RenderHead() {
+        yield "";
     }
 
-    * RenderBody(): any {
+    *RenderBody(): any {
         if (this.content instanceof Container) {
             yield this.content.render();
         } else {
@@ -80,8 +79,8 @@ class Container extends Stream<string> {
         }
     }
 
-    * RenderTail() {
-        yield '';
+    *RenderTail() {
+        yield "";
     }
 
     *stream() {
@@ -97,7 +96,7 @@ class Container extends Stream<string> {
     }
 
     render() {
-        let result = '';
+        let result = "";
         for (let r of this.stream()) {
             result += r;
         }

@@ -4,8 +4,14 @@ class Attribute extends Node {
     attribute: string;
     value: string;
 
-    constructor(name: Node | string = "", value: Node | string = "") {
-        super();
+    constructor({
+        name = "",
+        value = "",
+    }: {
+        name?: string | Node;
+        value?: string | Node;
+    }) {
+        super({});
         if (name instanceof Node) {
             this.attribute = name.render();
         } else {

@@ -4,7 +4,7 @@ import { minimal } from '../support/minimal';
 import { cool } from '../support/cool';
 
 beforeAll(() => {
-    globalThis.imp = new Imprint('./support/patterns/hello.xml', './support', '..');
+    globalThis.imp = new Imprint({ imprint: './support/patterns/hello.xml', imprint_dir: './support', approach_dir: '..'});
     globalThis.imp.Prepare();
     globalThis.imp.Mint();
 })

@@ -27,9 +27,9 @@ class Resource extends Node {
         _divide = null,
         _filter = null
     ) {
-        super();
+        super({});
         this.__approach_resource_context = [];
-        this.__approach_resource_context[locate] = _where ?? new Node('/');
+        this.__approach_resource_context[locate] = _where ?? new Node({ content: '/'} );
         this.__approach_resource_context[pick] = [];
         this.__approach_resource_context[sort] = [];
         this.__approach_resource_context[weigh] = [];

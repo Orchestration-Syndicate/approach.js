@@ -11,27 +11,29 @@ class HTML extends XML {
 
     /** HTML class constructor
      *
-     * @param string tag - The tag of the HTML element.
-     * @param string id - The id of the HTML element.
-     * @param string[] classes - The classes of the HTML element.
-     * @param attributes - The attributes of the HTML element.
-     * @param string content - The content of the HTML element.
-     * @param styles - The styles of the HTML element.
-     * @param boolean selfContained - Whether or not the HTML element is self-contained.
-     * @param boolean prerender - Whether or not to prerender the HTML element.
+     * @param obj
      * @returns HTML
      * */
-    constructor(
-        tag: string = "div",
-        id: string | null = null,
-        classes: string[] = [],
-        attributes: { [key: string]: string } = {},
-        content: string = "",
-        styles: { [key: string]: string } = {},
-        selfContained: boolean = false,
-        prerender: boolean = false,
-    ) {
-        super(tag, content, attributes, selfContained);
+    constructor({
+        tag = "div",
+        id = null,
+        classes = [],
+        attributes = {},
+        content = "",
+        styles = {},
+        selfContained = false,
+        prerender = false,
+    }: {
+        tag?: string;
+        id?: string | null;
+        classes?: string[];
+        attributes?: { [key: string]: string };
+        content?: string;
+        styles?: { [key: string]: string };
+        selfContained?: boolean;
+        prerender?: boolean;
+    }) {
+        super({ tag, content, attributes, selfContained });
         this.classes = classes;
         this.id = id;
         this.styles = styles;
@@ -42,7 +44,7 @@ class HTML extends XML {
         if (this.classes.length > 0) {
             if (this.attributes instanceof Attribute) {
                 this.attributes.nodes.push(
-                    new Attribute("class", this.classes.join(" ")),
+                    new Attribute({ name: "class", value: this.classes.join(" ") }),
                 );
             } else {
                 this.attributes["class"] = this.classes.join(" ");
@@ -50,7 +52,7 @@ class HTML extends XML {
         }
         if (this.id && this.id != "") {
             if (this.attributes instanceof Attribute) {
-                this.attributes.nodes.push(new Attribute("id", this.id));
+                this.attributes.nodes.push(new Attribute({ name: "id", value: this.id }));
             } else {
                 this.attributes["id"] = this.id;
             }
@@ -58,12 +60,12 @@ class HTML extends XML {
         if (this.styles && Object.keys(this.styles).length > 0) {
             if (this.attributes instanceof Attribute) {
                 this.attributes.nodes.push(
-                    new Attribute(
-                        "style",
-                        Object.entries(this.styles)
+                    new Attribute({
+                        name: "style",
+                        value: Object.entries(this.styles)
                             .map(([key, value]) => `${key} : ${value} `)
                             .join(";"),
-                    ),
+                    }),
                 );
             } else {
                 this.attributes["style"] = Object.entries(this.styles)
