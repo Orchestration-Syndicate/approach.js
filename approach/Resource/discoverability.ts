@@ -1,3 +1,4 @@
+import type { Aspect } from "./Aspect/Aspect";
 import { Resource } from "./Resource";
 
 abstract class discoverability {
@@ -176,21 +177,29 @@ abstract class discoverability {
                 break
         }
 
-        for(let c in Object.keys(config)){
+        for (let c in Object.keys(config)) {
             let aspect = config[c];
 
             aspect['package'] = caller.get_aspect_package();
             aspect['which'] = c;
             aspect['filename'] = c + '.php';
             aspect['directory'] = caller.get_aspect_directory();
+            aspect['namespace'] = caller.get_aspect_namespace();
 
-            //this.MintAspect(aspect);
+            this.MintAspect(aspect, config);
         }
     }
 
-    //for(let aspect in this.aspects){
-    //
-    //}
+    MintAspect(aspect: Aspect, config: any) {
+        let filename = config['filename'];
+
+        let path = config['directory'] + '/' + filename;
+
+        let use = 'import ' + path + ' from ' + config['package'] + ';';
+        let str = use + '\n\n';
+
+        str += 'class ' + config['name'] + ' extends ' + config['extends'] + '{\n\n';
+    }
 }
 
 export { discoverability };

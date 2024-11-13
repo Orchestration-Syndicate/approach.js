@@ -52,7 +52,7 @@ class Aspect extends Container {
 
         this.parent = parent;
         this.ancestor = ancestor;
-        //this.type = Aspect._index_map[type];
+        // this.type = Aspect._index_map[type];
     }
 
     cases() {
